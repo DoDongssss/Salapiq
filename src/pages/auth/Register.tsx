@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { registerWithEmail, loginWithGoogle } from "@/services/AuthService"
 import { useToast } from "@/hooks/useToast"
+import logo from "@/assets/logo.png"
 
 const perks = [
   { icon: BarChart2,  title: "Smart tracking", desc: "Auto-categorize every peso you spend.",       color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
@@ -61,7 +62,7 @@ export default function Register() {
             </div>
             <div className="relative z-10">
               <div className="mb-4">
-                <img src="/src/assets/logo.png" alt="Salapiq" className="h-16 w-auto object-contain" />
+                <img src={logo} alt="Salapiq" className="h-16 w-auto object-contain" />
               </div>
               <p className="mono text-[10px] tracking-[0.2em] text-emerald-500/70 uppercase mb-4">Join for free</p>
               <h2 className="text-white text-[26px] font-light leading-[1.2] tracking-tight">
