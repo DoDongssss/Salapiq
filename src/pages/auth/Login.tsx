@@ -5,7 +5,7 @@ export default function Login() {
   const { register, handleSubmit } = useForm<LoginForm>();
 
   return (
-    <div className="rounded-xl bg-white min-w-[850px] h-[500px] flex ">
+    <div className="rounded-xl border shadow-sm bg-white min-w-[850px] h-[500px] flex ">
       <div className="h-full w-[55%] bg-blue-500 rounded-l-xl p-10">
         Left Content
       </div>
@@ -13,9 +13,21 @@ export default function Login() {
         <div className="flex flex-col items-center">
           <h1>Login</h1>
           <p>Enter details or etc etc etc</p>
-          <>
-            
-          </>
+          <div>
+            <form onSubmit={handleSubmit}>
+              <div>
+                <span>Email</span>
+                <input type="text" />
+              </div>
+              <div>
+                <span>Password</span>
+                <input type="password" />
+              </div>
+              <div>
+                <button type="submit" className="btn btn-primary">Login</button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
