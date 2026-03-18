@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { loginWithEmail, loginWithGoogle } from "@/services/AuthService"
 import { useToast } from "@/hooks/useToast"
+import logo from "@/assets/logo.png"
 
 const expenses = [
   { icon: Coffee,       label: "Morning coffee",  amount: "−₱85",    color: "bg-amber-50 text-amber-700 border-amber-200"      },
@@ -67,7 +68,7 @@ export default function Login() {
             </div>
             <div className="relative z-10">
               <div className="mb-4">
-                <img src="/src/assets/logo.png" alt="Salapiq" className="h-16 w-auto object-contain" />
+                <img src={logo} alt="Salapiq" className="h-16 w-auto object-contain" />
               </div>
               <p className="mono text-[10px] tracking-[0.2em] text-emerald-500/70 uppercase mb-4">AI-powered finance</p>
               <h2 className="text-white text-[28px] font-light leading-[1.15] tracking-tight">
