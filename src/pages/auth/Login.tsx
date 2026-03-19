@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { loginSchema, type LoginForm } from "@/schema/Auth"
+import { loginSchema, type LoginForm } from "@/schemas/Auth"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Eye, EyeOff, ArrowRight, Sparkles, TrendingDown, Coffee, ShoppingBag, Zap } from "lucide-react"
@@ -48,7 +48,7 @@ export default function Login() {
     }
 
     toast({ type: "success", title: "Welcome back!", description: "You're now signed in to Salapiq." })
-    navigate("/home", { replace: true })
+    navigate("/app/dashboard", { replace: true })
   }
 
   const handleGoogleLogin = async () => {
