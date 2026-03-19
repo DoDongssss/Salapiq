@@ -2,7 +2,7 @@ import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/hooks/useAuth"
 import { useSessionTimeout } from "@/hooks/useSessionTimeout"
-import { logout } from "@/services/AuthService"
+import { logout } from "@/services/authService"
 
 export default function Home() {
   const navigate = useNavigate()

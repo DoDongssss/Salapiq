@@ -33,7 +33,7 @@ export default function AuthCallback() {
       if (event === "SIGNED_IN") {
         subscription.unsubscribe()
         toast({ type: "success", title: "Welcome!", description: "You're now signed in to Salapiq." })
-        navigate("/home", { replace: true })
+        navigate("/app/dashboard", { replace: true })
       }
     })
 

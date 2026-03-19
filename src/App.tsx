@@ -6,21 +6,39 @@ import Register from './pages/auth/Register'
 import ForgetPassword from './pages/auth/ForgetPassword'
 import VerifyEmail from './pages/auth/VerifyEmail'
 import AuthCallback from './pages/auth/AuthCallback'
+import SubscriberLayout from './pages/layouts/SubscriberLayout'
+import Dashboard from './pages/subscriber/dashboard'
+import Accounts from './pages/subscriber/Accounts'
+import Transactions from './pages/subscriber/Transactions'
+import Settings from './pages/subscriber/settings'
+import FamilyShell from './pages/subscriber/FamilyShell'
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/auth/callback" element={<AuthCallback />} />
+
         <Route path="/home" element={<Home />} />
 
         <Route path="/auth" element={<AuthLayout />}>
           <Route index element={<Navigate to="login" replace />} />
-          <Route path="login" element={<Login />} />
-          <Route path="register" element={<Register />} />
-          <Route path="verify-email" element={<VerifyEmail />} />
+          <Route path="login"          element={<Login />}         />
+          <Route path="register"       element={<Register />}      />
+          <Route path="verify-email"   element={<VerifyEmail />}   />
           <Route path="forget-password" element={<ForgetPassword />} />
         </Route>
+
+        <Route path="/app" element={<SubscriberLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard"    element={<Dashboard />}    />
+          <Route path="accounts"     element={<Accounts />}     />
+          <Route path="transactions" element={<Transactions />} />
+          <Route path="family/*"     element={<FamilyShell />}  />
+          <Route path="settings"     element={<Settings />}     />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/auth/login" replace />} />
       </Routes>
     </Router>
   )

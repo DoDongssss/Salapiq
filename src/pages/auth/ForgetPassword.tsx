@@ -1,13 +1,13 @@
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { forgotPasswordSchema, type ForgotPasswordForm } from "@/schema/Auth"
+import { forgotPasswordSchema, type ForgotPasswordForm } from "@/schemas/Auth"
 import { useState } from "react"
 import { ArrowLeft, ArrowRight, MailCheck, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
-import { sendPasswordResetEmail } from "@/services/AuthService"
+import { sendPasswordResetEmail } from "@/services/authService"
 import { useToast } from "@/hooks/useToast"
 
 export default function ForgotPassword() {

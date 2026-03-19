@@ -7,7 +7,7 @@ const AuthLayout: React.FC = () => {
 
   if (loading) return null
 
-  if (user) return <Navigate to="/home" replace />
+  if (user) return <Navigate to="/app/dashboard" replace />
 
   return (
     <div className="h-screen w-full flex items-center justify-center">
