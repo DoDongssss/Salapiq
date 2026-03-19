@@ -663,7 +663,7 @@ function CreateFamilyModal({
   const handleCreate = async () => {
     if (!user || !name.trim()) return
     setLoading(true)
-    const { error } = await createFamily(user.id, { name: name.trim(), description: desc.trim() })
+    const { error } = await createFamily({ name: name.trim(), description: desc.trim() })
     setLoading(false)
     if (error) {
       toast({ type: "error", title: "Failed to create", description: error })
