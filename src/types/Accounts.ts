@@ -36,20 +36,22 @@ export type Transaction = {
 }
 
 export const accountSchema = z.object({
-  name:      z.string().min(1, "required"),
-  type:      z.enum(["bank", "debit", "ewallet", "cash"]),
-  provider:  z.string().optional(),
-  balance:   z.number({ error: "must be a number" }).default(0),
-  currency:  z.string().min(1, "required"),
-  color:     z.string().min(1, "required"),
-  icon:      z.string().min(1, "required"),
+  name:     z.string().min(1, "required"),
+  type:     z.enum(["bank", "debit", "ewallet", "cash"]),
+  provider: z.string().optional(),
+  balance:  z.number({ error: "must be a number" })
+                    .min(0, "must be positive").optional(),
+  currency: z.string().min(1, "required"),
+  color:    z.string().min(1, "required"),
+  icon:     z.string().min(1, "required"),
 })
 
 export type AccountForm = z.infer<typeof accountSchema>
 
 export const transactionSchema = z.object({
   account_id:    z.string().min(1, "select an account"),
-  amount:        z.number({ error: "must be a number" }).min(0.01, "must be greater than 0"),
+  amount:        z.number({ error: "must be a number" })
+                    .min(0, "must be positive").optional(), 
   type:          z.enum(["income", "expense", "transfer"]),
   category:      z.string().optional(),
   note:          z.string().optional(),

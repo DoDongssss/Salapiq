@@ -75,6 +75,7 @@ export function getTotalBalance(accounts: Account[]): number {
 export type TransactionWithAccount = Transaction & {
   account:    Pick<Account, "name" | "color" | "icon" | "type">
   to_account: Pick<Account, "name" | "color" | "icon" | "type"> | null
+  member?:    { full_name: string; avatar_url: string | null } | null
 }
 
 export async function getTransactions(
@@ -119,6 +120,8 @@ export async function createTransaction(
 ): Promise<{ data: Transaction | null; error: string | null }> {
 
   if (payload.type === "transfer") {
+    if (!payload.amount) return { data: null, error: "Amount is required." }
+
     const account = await getAccount(payload.account_id)
     if (!account) return { data: null, error: "Account not found." }
     if (payload.amount > account.balance) {

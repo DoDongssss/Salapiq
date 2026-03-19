@@ -13,17 +13,21 @@ import {
 import { getAccounts } from "@/services/AccountService"
 import {
   Users, Home, Wallet, ArrowLeftRight,
-  Plus, Copy, RefreshCw, LogOut, Trash2,
+  Plus, Copy, RefreshCw, LogOut,
   Crown, UserMinus, ChevronRight, X,
   TrendingUp, TrendingDown,
   Building2, CreditCard, Smartphone,
+  type LucideIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 
-const ACCOUNT_ICONS: Record<string, any> = {
+import type { Account } from "@/types/Accounts"
+import type { TransactionWithAccount } from "@/services/AccountService"
+
+const ACCOUNT_ICONS: Record<string, LucideIcon> = {
   bank:    Building2,
   debit:   CreditCard,
   ewallet: Smartphone,
@@ -33,26 +37,55 @@ const ACCOUNT_ICONS: Record<string, any> = {
 function Avatar({
   name, url, size = "md",
 }: { name: string; url?: string | null; size?: "sm" | "md" | "lg" }) {
-  const sz = size === "sm" ? "w-7 h-7 text-[10px]" : size === "lg" ? "w-12 h-12 text-base" : "w-9 h-9 text-[12px]"
+  const sz = size === "sm"
+    ? "w-7 h-7 text-[10px]"
+    : size === "lg"
+    ? "w-12 h-12 text-base"
+    : "w-9 h-9 text-[12px]"
   const initials = name.slice(0, 2).toUpperCase()
   return url
     ? <img src={url} alt={name} className={cn(sz, "rounded-xl object-cover shrink-0")} />
     : <div className={cn(sz, "rounded-xl bg-emerald-100 flex items-center justify-center shrink-0 font-medium text-emerald-700 mono")}>{initials}</div>
 }
 
+const NAV = [
+  { to: "/app/family",              icon: Home,           label: "Overview"      },
+  { to: "/app/family/members",      icon: Users,          label: "Members"       },
+  { to: "/app/family/accounts",     icon: Wallet,         label: "Accounts"      },
+  { to: "/app/family/transactions", icon: ArrowLeftRight, label: "Transactions"  },
+]
+
 export default function FamilyShell() {
-  const { user }  = useAuth()
-  const { toast } = useToast()
-  const navigate  = useNavigate()
+  const { user } = useAuth()
 
-  const [family,        setFamily]        = useState<FamilyWithMembers | null>(null)
-  const [loading,       setLoading]       = useState(true)
-  const [showCreate,    setShowCreate]    = useState(false)
-  const [showJoin,      setShowJoin]      = useState(false)
+  const [family,     setFamily]     = useState<FamilyWithMembers | null>(null)
+  const [loading,    setLoading]    = useState(true)
+  const [showCreate, setShowCreate] = useState(false)
+  const [showJoin,   setShowJoin]   = useState(false)
 
-  const loadFamily = useCallback(async () => {
+  useEffect(() => {
     if (!user) return
-    setLoading(true)
+    let cancelled = false
+
+    const run = async () => {
+      setLoading(true)
+      const base = await getMyFamily(user.id)
+      if (cancelled) return
+      if (base) {
+        const full = await getFamilyWithMembers(base.id)
+        if (!cancelled) setFamily(full)
+      } else {
+        setFamily(null)
+      }
+      setLoading(false)
+    }
+
+    run()
+    return () => { cancelled = true }
+  }, [user])
+
+  const reload = useCallback(async () => {
+    if (!user) return
     const base = await getMyFamily(user.id)
     if (base) {
       const full = await getFamilyWithMembers(base.id)
@@ -60,10 +93,7 @@ export default function FamilyShell() {
     } else {
       setFamily(null)
     }
-    setLoading(false)
   }, [user])
-
-  useEffect(() => { loadFamily() }, [loadFamily])
 
   const myRole = family?.members.find((m) => m.user_id === user?.id)?.role
 
@@ -89,14 +119,13 @@ export default function FamilyShell() {
         {showCreate && (
           <CreateFamilyModal
             onClose={() => setShowCreate(false)}
-            onCreated={() => { setShowCreate(false); loadFamily() }}
+            onCreated={() => { setShowCreate(false); reload() }}
           />
         )}
-
         {showJoin && (
           <JoinFamilyModal
             onClose={() => setShowJoin(false)}
-            onJoined={() => { setShowJoin(false); loadFamily() }}
+            onJoined={() => { setShowJoin(false); reload() }}
           />
         )}
       </div>
@@ -108,22 +137,17 @@ export default function FamilyShell() {
       <div className="page-reveal">
         <div className="h-8 w-40 bg-stone-100 rounded animate-pulse mb-6" />
         <div className="grid grid-cols-4 gap-4">
-          {[1,2,3,4].map((i) => <div key={i} className="h-24 bg-stone-100 rounded-2xl animate-pulse" />)}
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-24 bg-stone-100 rounded-2xl animate-pulse" />
+          ))}
         </div>
       </div>
     )
   }
 
-const NAV = [
-  { to: "/app/family",              icon: Home,           label: "Overview"     },
-  { to: "/app/family/members",      icon: Users,          label: "Members"      },
-  { to: "/app/family/accounts",     icon: Wallet,         label: "Accounts"     },
-  { to: "/app/family/transactions", icon: ArrowLeftRight, label: "Transactions" },
-]
-
   return (
     <div className="page-reveal">
-      {/* Header */}
+
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
@@ -131,7 +155,9 @@ const NAV = [
           </div>
           <div>
             <h1 className="text-xl font-semibold text-stone-900 tracking-tight">{family?.name}</h1>
-            <p className="mono text-[10px] text-stone-400">{family?.members.length} member{family?.members.length !== 1 ? "s" : ""}</p>
+            <p className="mono text-[10px] text-stone-400">
+              {family?.members.length} member{family?.members.length !== 1 ? "s" : ""}
+            </p>
           </div>
         </div>
         {myRole === "admin" && (
@@ -143,27 +169,27 @@ const NAV = [
 
       <div className="flex gap-1 mb-6 bg-stone-100 p-1 rounded-xl w-fit">
         {NAV.map(({ to, icon: Icon, label }) => (
-            <NavLink
-                key={label}
-                to={to}
-                end={to === "/app/family"} 
-                className={({ isActive }) => cn(
-                "flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-medium transition-all",
-                isActive
-                    ? "bg-white text-stone-900 shadow-sm"
-                    : "text-stone-500 hover:text-stone-700"
-                )}
-            >
-                <Icon size={13} />{label}
-            </NavLink>
+          <NavLink
+            key={label}
+            to={to}
+            end={to === "/app/family"}
+            className={({ isActive }) => cn(
+              "flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-medium transition-all",
+              isActive
+                ? "bg-white text-stone-900 shadow-sm"
+                : "text-stone-500 hover:text-stone-700"
+            )}
+          >
+            <Icon size={13} />{label}
+          </NavLink>
         ))}
       </div>
 
       <Routes>
-        <Route index                  element={<FamilyOverview    family={family!} myRole={myRole} onReload={loadFamily} />} />
-        <Route path="members"         element={<FamilyMembers     family={family!} myRole={myRole} onReload={loadFamily} />} />
-        <Route path="accounts"        element={<FamilyAccounts    family={family!} myRole={myRole} onReload={loadFamily} />} />
-        <Route path="transactions"    element={<FamilyTransactions family={family!} />} />
+        <Route index             element={<FamilyOverview     family={family!} myRole={myRole} onReload={reload} />} />
+        <Route path="members"    element={<FamilyMembers      family={family!} myRole={myRole} onReload={reload} />} />
+        <Route path="accounts"   element={<FamilyAccounts     family={family!} myRole={myRole} onReload={reload} />} />
+        <Route path="transactions" element={<FamilyTransactions family={family!} />} />
       </Routes>
     </div>
   )
@@ -218,7 +244,10 @@ function FamilyOverview({
       <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[14px] font-semibold text-stone-900">Members</h2>
-          <button onClick={() => navigate("/app/family/members")} className="mono text-[10px] text-emerald-600 hover:underline flex items-center gap-0.5">
+          <button
+            onClick={() => navigate("/app/family/members")}
+            className="mono text-[10px] text-emerald-600 hover:underline flex items-center gap-0.5"
+          >
             View all <ChevronRight size={10} />
           </button>
         </div>
@@ -247,7 +276,12 @@ function FamilyOverview({
               <p className="text-[13px] font-medium text-red-600">Leave family</p>
               <p className="mono text-[10px] text-stone-400 mt-0.5">You can rejoin later with the invite code</p>
             </div>
-            <Button onClick={handleLeave} disabled={leaving} variant="outline" className="text-[12px] h-9 border-red-200 text-red-500 hover:bg-red-50">
+            <Button
+              onClick={handleLeave}
+              disabled={leaving}
+              variant="outline"
+              className="text-[12px] h-9 border-red-200 text-red-500 hover:bg-red-50"
+            >
               <LogOut size={13} className="mr-1.5" /> Leave
             </Button>
           </div>
@@ -256,8 +290,6 @@ function FamilyOverview({
     </div>
   )
 }
-
-// ─── Members ──────────────────────────────────────────────────────────────────
 
 function FamilyMembers({
   family, myRole, onReload,
@@ -300,7 +332,6 @@ function FamilyMembers({
   return (
     <div className="flex flex-col gap-5">
 
-      {/* Invite code regen — admin only */}
       {myRole === "admin" && (
         <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-5">
           <div className="flex items-center justify-between">
@@ -308,14 +339,17 @@ function FamilyMembers({
               <p className="text-[13px] font-medium text-stone-800">Invite code</p>
               <p className="mono text-[14px] text-emerald-700 font-semibold tracking-[0.15em] mt-0.5">{family.invite_code}</p>
             </div>
-            <Button onClick={handleRegenCode} variant="outline" className="text-[11px] h-8 px-3 border-stone-200 text-stone-600 hover:border-emerald-400 hover:text-emerald-600">
+            <Button
+              onClick={handleRegenCode}
+              variant="outline"
+              className="text-[11px] h-8 px-3 border-stone-200 text-stone-600 hover:border-emerald-400 hover:text-emerald-600"
+            >
               <RefreshCw size={11} className="mr-1" /> Regenerate
             </Button>
           </div>
         </div>
       )}
 
-      {/* Members list */}
       <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] overflow-hidden">
         <div className="px-5 py-4 border-b border-stone-50">
           <h2 className="text-[14px] font-semibold text-stone-900">
@@ -331,7 +365,8 @@ function FamilyMembers({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-[13px] font-medium text-stone-800">
-                    {m.profile?.full_name} {isMe && <span className="mono text-[9px] text-stone-400">(you)</span>}
+                    {m.profile?.full_name}{" "}
+                    {isMe && <span className="mono text-[9px] text-stone-400">(you)</span>}
                   </p>
                   {m.role === "admin" && (
                     <span className="mono text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
@@ -343,8 +378,6 @@ function FamilyMembers({
                   {m.profile?.email} · Joined {new Date(m.joined_at).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}
                 </p>
               </div>
-
-              {/* Admin actions — can't act on yourself */}
               {isAdmin && !isMe && (
                 <div className="flex items-center gap-1.5 shrink-0">
                   <Button
@@ -370,31 +403,44 @@ function FamilyMembers({
   )
 }
 
-// ─── Accounts ─────────────────────────────────────────────────────────────────
-
 function FamilyAccounts({
-  family, myRole, onReload,
+  family
 }: { family: FamilyWithMembers; myRole?: string; onReload: () => void }) {
   const { user }  = useAuth()
   const { toast } = useToast()
-  const [familyAccounts, setFamilyAccounts] = useState<any[]>([])
-  const [myAccounts,     setMyAccounts]     = useState<any[]>([])
-  const [loading,        setLoading]        = useState(true)
+const [familyAccounts, setFamilyAccounts] = useState<Account[]>([])
+const [myAccounts,     setMyAccounts]     = useState<Account[]>([])
+const [loading,        setLoading]        = useState(true)
 
-  const load = useCallback(async () => {
+  useEffect(() => {
     if (!user) return
-    setLoading(true)
+    let cancelled = false
+
+    const run = async () => {
+      setLoading(true)
+      const [fa, ma] = await Promise.all([
+        getFamilyAccounts(family.id),
+        getAccounts(user.id),
+      ])
+      if (cancelled) return
+      setFamilyAccounts(fa)
+      setMyAccounts(ma.filter((a) => a.family_id !== family.id))
+      setLoading(false)
+    }
+
+    run()
+    return () => { cancelled = true }
+  }, [user, family.id])
+
+  const reload = useCallback(async () => {
+    if (!user) return
     const [fa, ma] = await Promise.all([
       getFamilyAccounts(family.id),
       getAccounts(user.id),
     ])
     setFamilyAccounts(fa)
-    // Only show accounts not already linked to this family
-    setMyAccounts(ma.filter((a: any) => a.family_id !== family.id))
-    setLoading(false)
+    setMyAccounts(ma.filter((a) => a.family_id !== family.id))
   }, [user, family.id])
-
-  useEffect(() => { load() }, [load])
 
   const handleLink = async (accountId: string) => {
     const error = await linkAccountToFamily(accountId, family.id)
@@ -402,7 +448,7 @@ function FamilyAccounts({
       toast({ type: "error", title: "Failed to link", description: error })
     } else {
       toast({ type: "success", title: "Account shared with family" })
-      load()
+      reload() 
     }
   }
 
@@ -412,7 +458,7 @@ function FamilyAccounts({
       toast({ type: "error", title: "Failed to unlink", description: error })
     } else {
       toast({ type: "info", title: "Account removed from family" })
-      load()
+      reload() 
     }
   }
 
@@ -421,7 +467,6 @@ function FamilyAccounts({
   return (
     <div className="flex flex-col gap-5">
 
-      {/* Shared accounts */}
       <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] overflow-hidden">
         <div className="px-5 py-4 border-b border-stone-50">
           <h2 className="text-[14px] font-semibold text-stone-900">Shared accounts</h2>
@@ -433,7 +478,7 @@ function FamilyAccounts({
             <p className="mono text-[11px] text-stone-400">No shared accounts yet</p>
           </div>
         ) : (
-          familyAccounts.map((a: any) => {
+          familyAccounts.map((a) => {
             const Icon = ACCOUNT_ICONS[a.type] ?? Wallet
             return (
               <div key={a.id} className="flex items-center gap-3 px-5 py-4 border-b border-stone-50 last:border-0">
@@ -456,14 +501,13 @@ function FamilyAccounts({
         )}
       </div>
 
-      {/* Link your accounts */}
       {myAccounts.length > 0 && (
         <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] overflow-hidden">
           <div className="px-5 py-4 border-b border-stone-50">
             <h2 className="text-[14px] font-semibold text-stone-900">Share your accounts</h2>
             <p className="mono text-[10px] text-stone-400 mt-0.5">Add your personal accounts to the family</p>
           </div>
-          {myAccounts.map((a: any) => {
+          {myAccounts.map((a) => {
             const Icon = ACCOUNT_ICONS[a.type] ?? Wallet
             return (
               <div key={a.id} className="flex items-center gap-3 px-5 py-4 border-b border-stone-50 last:border-0">
@@ -490,18 +534,24 @@ function FamilyAccounts({
 }
 
 function FamilyTransactions({ family }: { family: FamilyWithMembers }) {
-  const [transactions, setTransactions] = useState<any[]>([])
+  const [transactions, setTransactions] = useState<TransactionWithAccount[]>([])
   const [loading,      setLoading]      = useState(true)
   const [filterType,   setFilterType]   = useState("all")
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    const txns = await getFamilyTransactions(family.id, { limit: 50 })
-    setTransactions(txns)
-    setLoading(false)
-  }, [family.id])
+  useEffect(() => {
+    let cancelled = false
 
-  useEffect(() => { load() }, [load])
+    const run = async () => {
+      setLoading(true)
+      const txns = await getFamilyTransactions(family.id, { limit: 50 })
+      if (cancelled) return
+      setTransactions(txns)
+      setLoading(false)
+    }
+
+    run()
+    return () => { cancelled = true }
+  }, [family.id])
 
   const filtered = transactions.filter((t) =>
     filterType === "all" ? true : t.type === filterType
@@ -510,7 +560,6 @@ function FamilyTransactions({ family }: { family: FamilyWithMembers }) {
   return (
     <div className="flex flex-col gap-4">
 
-      {/* Filter */}
       <div className="flex items-center gap-1.5">
         {["all", "expense", "income", "transfer"].map((v) => (
           <button
@@ -548,7 +597,7 @@ function FamilyTransactions({ family }: { family: FamilyWithMembers }) {
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
-          {filtered.map((t: any) => {
+          {filtered.map((t) => {
             const isIncome   = t.type === "income"
             const isExpense  = t.type === "expense"
             const isTransfer = t.type === "transfer"
@@ -602,8 +651,6 @@ function FamilyTransactions({ family }: { family: FamilyWithMembers }) {
   )
 }
 
-// ─── Create Family Modal ──────────────────────────────────────────────────────
-
 function CreateFamilyModal({
   onClose, onCreated,
 }: { onClose: () => void; onCreated: () => void }) {
@@ -627,7 +674,10 @@ function CreateFamilyModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div
+      className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-stone-100">
           <h2 className="text-[15px] font-semibold text-stone-900">Create a family</h2>
@@ -646,7 +696,9 @@ function CreateFamilyModal({
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Description <span className="text-stone-300">(optional)</span></Label>
+            <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">
+              Description <span className="text-stone-300">(optional)</span>
+            </Label>
             <Input
               placeholder="Our family budget tracker"
               value={desc}
@@ -658,7 +710,11 @@ function CreateFamilyModal({
             <Button type="button" variant="outline" onClick={onClose} className="text-[12px] h-9 border-stone-200 text-stone-600">
               Cancel
             </Button>
-            <Button onClick={handleCreate} disabled={loading || !name.trim()} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-5">
+            <Button
+              onClick={handleCreate}
+              disabled={loading || !name.trim()}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-5"
+            >
               {loading ? "Creating..." : "Create family"}
             </Button>
           </div>
@@ -667,8 +723,6 @@ function CreateFamilyModal({
     </div>
   )
 }
-
-// ─── Join Family Modal ────────────────────────────────────────────────────────
 
 function JoinFamilyModal({
   onClose, onJoined,
@@ -691,7 +745,10 @@ function JoinFamilyModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div
+      className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-stone-100">
           <h2 className="text-[15px] font-semibold text-stone-900">Join a family</h2>
@@ -714,7 +771,11 @@ function JoinFamilyModal({
             <Button type="button" variant="outline" onClick={onClose} className="text-[12px] h-9 border-stone-200 text-stone-600">
               Cancel
             </Button>
-            <Button onClick={handleJoin} disabled={loading || code.length < 6} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-5">
+            <Button
+              onClick={handleJoin}
+              disabled={loading || code.length < 6}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-5"
+            >
               {loading ? "Joining..." : "Join family"}
             </Button>
           </div>

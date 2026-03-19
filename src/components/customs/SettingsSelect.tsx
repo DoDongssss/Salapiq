@@ -10,7 +10,7 @@ export type SelectOption = {
 type SettingsSelectProps = React.ComponentPropsWithoutRef<"select"> & {
   label:    string
   icon?:    React.ElementType
-  options?: SelectOption[]
+  options?:  readonly SelectOption[] 
   error?:   string
 }
 

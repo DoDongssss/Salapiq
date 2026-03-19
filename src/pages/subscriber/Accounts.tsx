@@ -89,7 +89,7 @@ export default function Accounts() {
       name:     account.name,
       type:     account.type,
       provider: account.provider ?? "",
-      balance:  account.balance,
+      balance:  account.balance ?? 0,
       currency: account.currency,
       color:    account.color,
       icon:     account.icon,
