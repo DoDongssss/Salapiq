@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabaseClient"
-import { sendPasswordResetEmail } from "@/services/authService"
+import { sendPasswordResetEmail } from "@/services/AuthService"
 import type {
   Profile, UserSettingsRow,
   NotificationPrefs, ProfileForm,

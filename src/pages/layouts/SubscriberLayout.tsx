@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { Outlet, useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "@/hooks/useAuth"
 import { useSessionTimeout } from "@/hooks/useSessionTimeout"
-import { logout } from "@/services/authService"
+import { logout } from "@/services/AuthService"
 import {
   LayoutDashboard, ListChecks, Target,
   PiggyBank, Sparkles, Bell, Plus, LogOut,

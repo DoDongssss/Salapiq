@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import { logout } from "@/services/authService"
+import { logout } from "@/services/AuthService"
 
 const TIMEOUT_MS = 30 * 60 * 1000
 
