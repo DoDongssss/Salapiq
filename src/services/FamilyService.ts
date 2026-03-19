@@ -66,9 +66,7 @@ export async function getFamilyWithMembers(
   return data as FamilyWithMembers
 }
 
-// ✅ Uses SECURITY DEFINER RPC — bypasses RLS insert issue
 export async function createFamily(
-  userId: string,
   payload: CreateFamilyForm
 ): Promise<{ data: Family | null; error: string | null }> {
   const { data, error } = await supabase.rpc("create_family", {
@@ -88,7 +86,6 @@ export async function createFamily(
 
   if (result.error) return { data: null, error: result.error }
 
-  // Fetch full family row after creation
   const { data: family, error: fetchError } = await supabase
     .from("families")
     .select("*")
@@ -119,8 +116,6 @@ export async function deleteFamily(familyId: string): Promise<string | null> {
 
   return error ? error.message : null
 }
-
-// ─── Invite code ──────────────────────────────────────────────────────────────
 
 export async function joinFamilyByCode(
   inviteCode: string
@@ -161,8 +156,6 @@ export async function regenerateInviteCode(
   return { code: newCode, error: null }
 }
 
-// ─── Members ──────────────────────────────────────────────────────────────────
-
 export async function removeMember(
   familyId: string,
   userId: string
@@ -202,8 +195,6 @@ export async function leaveFamily(
 
   return error ? error.message : null
 }
-
-// ─── Shared accounts ──────────────────────────────────────────────────────────
 
 export async function getFamilyAccounts(familyId: string) {
   const { data, error } = await supabase
