@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAuth } from "@/hooks/useAuth"
@@ -6,11 +6,11 @@ import { useToast } from "@/hooks/useToast"
 import {
   accountSchema, type AccountForm, type Account,
   ACCOUNT_TYPES, ACCOUNT_PROVIDERS, ACCOUNT_COLORS,
-} from "@/types/Accounts"
+} from "@/types/AccountTypes"
 import {
-  getAccounts, createAccount, updateAccount,
-  deleteAccount, getTotalBalance,
+createAccount, updateAccount, deleteAccount, getTotalBalance,
 } from "@/services/AccountService"
+import { useAccountStore } from "@/stores/useAccountStore"
 import SettingsSelect from "@/components/customs/SettingsSelect"
 import SpinnerBtn from "@/components/customs/SpinnerBtn"
 import {
@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+
 
 const TYPE_ICONS = {
   bank:    Building2,
@@ -36,16 +37,19 @@ const TYPE_LABELS = {
   cash:    "Cash wallet",
 }
 
+
 export default function Accounts() {
   const { user }  = useAuth()
   const { toast } = useToast()
 
-  const [accounts,     setAccounts]     = useState<Account[]>([])
-  const [loading,      setLoading]      = useState(true)
-  const [showModal,    setShowModal]    = useState(false)
-  const [editAccount,  setEditAccount]  = useState<Account | null>(null)
-  const [menuOpen,     setMenuOpen]     = useState<string | null>(null)
-  const [deleting,     setDeleting]     = useState<string | null>(null)
+  const accounts = useAccountStore((s) => s.accounts)
+  const loading  = useAccountStore((s) => s.loading)
+  const refresh  = useAccountStore((s) => s.refresh)
+
+  const [showModal,   setShowModal]   = useState(false)
+  const [editAccount, setEditAccount] = useState<Account | null>(null)
+  const [menuOpen,    setMenuOpen]    = useState<string | null>(null)
+  const [deleting,    setDeleting]    = useState<string | null>(null)
 
   const form = useForm<AccountForm>({
     resolver: zodResolver(accountSchema),
@@ -60,18 +64,8 @@ export default function Accounts() {
     },
   })
 
-  const watchType = form.watch("type")
-
-  const load = async () => {
-    if (!user) return
-    setLoading(true)
-    const data = await getAccounts(user.id)
-    setAccounts(data)
-    setLoading(false)
-  }
-
-  useEffect(() => { load() }, [user])
-
+  const watchType  = form.watch("type")
+  const watchColor = form.watch("color")
 
   const openCreate = () => {
     setEditAccount(null)
@@ -89,7 +83,7 @@ export default function Accounts() {
       name:     account.name,
       type:     account.type,
       provider: account.provider ?? "",
-      balance:  account.balance ?? 0,
+      balance:  account.balance  ?? 0,
       currency: account.currency,
       color:    account.color,
       icon:     account.icon,
@@ -108,7 +102,7 @@ export default function Accounts() {
       } else {
         toast({ type: "success", title: "Account updated" })
         setShowModal(false)
-        load()
+        await refresh(user.id)
       }
     } else {
       const { error } = await createAccount(user.id, data)
@@ -117,12 +111,13 @@ export default function Accounts() {
       } else {
         toast({ type: "success", title: "Account created" })
         setShowModal(false)
-        load()
+        await refresh(user.id)
       }
     }
   }
 
   const handleDelete = async (id: string) => {
+    if (!user) return
     setDeleting(id)
     const error = await deleteAccount(id)
     setDeleting(null)
@@ -131,7 +126,7 @@ export default function Accounts() {
       toast({ type: "error", title: "Failed to delete", description: error })
     } else {
       toast({ type: "info", title: "Account removed" })
-      load()
+      await refresh(user.id)
     }
   }
 
@@ -156,7 +151,9 @@ export default function Accounts() {
           <p className="text-3xl font-semibold text-white tracking-tight">
             ₱{totalBalance.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
           </p>
-          <p className="mono text-[10px] text-emerald-900 mt-1">{accounts.length} account{accounts.length !== 1 ? "s" : ""}</p>
+          <p className="mono text-[10px] text-emerald-900 mt-1">
+            {accounts.length} account{accounts.length !== 1 ? "s" : ""}
+          </p>
         </div>
       )}
 
@@ -170,7 +167,9 @@ export default function Accounts() {
         <div className="bg-white rounded-2xl border border-stone-200 p-12 text-center">
           <Wallet size={32} className="text-stone-300 mx-auto mb-3" />
           <p className="text-[14px] font-medium text-stone-600">No accounts yet</p>
-          <p className="mono text-[11px] text-stone-400 mt-1 mb-4">Add your bank, e-wallet or cash account to start tracking</p>
+          <p className="mono text-[11px] text-stone-400 mt-1 mb-4">
+            Add your bank, e-wallet or cash account to start tracking
+          </p>
           <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-4">
             <Plus size={13} className="mr-1" /> Add your first account
           </Button>
@@ -236,7 +235,10 @@ export default function Accounts() {
               <h2 className="text-[15px] font-semibold text-stone-900">
                 {editAccount ? "Edit account" : "Add account"}
               </h2>
-              <button onClick={() => setShowModal(false)} className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-50 transition-colors">
+              <button
+                onClick={() => setShowModal(false)}
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-50 transition-colors"
+              >
                 <X size={14} />
               </button>
             </div>
@@ -250,7 +252,9 @@ export default function Accounts() {
                   className={cn("h-10 text-sm bg-stone-50 border-stone-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20", form.formState.errors.name && "border-red-300")}
                   {...form.register("name")}
                 />
-                {form.formState.errors.name && <p className="mono text-[10px] text-red-400">— {form.formState.errors.name.message}</p>}
+                {form.formState.errors.name && (
+                  <p className="mono text-[10px] text-red-400">— {form.formState.errors.name.message}</p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -259,10 +263,7 @@ export default function Accounts() {
                   options={ACCOUNT_TYPES}
                   {...form.register("type")}
                 />
-                <SettingsSelect
-                  label="Provider"
-                  {...form.register("provider")}
-                >
+                <SettingsSelect label="Provider" {...form.register("provider")}>
                   <option value="">None</option>
                   {(ACCOUNT_PROVIDERS[watchType] ?? []).map((p) => (
                     <option key={p} value={p}>{p}</option>
@@ -290,6 +291,7 @@ export default function Accounts() {
                 </SettingsSelect>
               </div>
 
+              {/* Color picker */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Color</Label>
                 <div className="flex gap-2 flex-wrap">
@@ -300,7 +302,7 @@ export default function Accounts() {
                       onClick={() => form.setValue("color", color)}
                       className={cn(
                         "w-8 h-8 rounded-lg border-2 transition-all",
-                        form.watch("color") === color ? "border-stone-900 scale-110" : "border-transparent"
+                        watchColor === color ? "border-stone-900 scale-110" : "border-transparent"
                       )}
                       style={{ backgroundColor: color }}
                     />
@@ -309,10 +311,19 @@ export default function Accounts() {
               </div>
 
               <div className="flex gap-2 justify-end pt-2">
-                <Button type="button" variant="outline" onClick={() => setShowModal(false)} className="text-[12px] h-9 border-stone-200 text-stone-600">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowModal(false)}
+                  className="text-[12px] h-9 border-stone-200 text-stone-600"
+                >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={form.formState.isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-5">
+                <Button
+                  type="submit"
+                  disabled={form.formState.isSubmitting}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-5"
+                >
                   {form.formState.isSubmitting
                     ? <SpinnerBtn label={editAccount ? "Saving" : "Creating"} />
                     : editAccount ? "Save changes" : "Create account"

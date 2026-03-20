@@ -3,7 +3,7 @@ import { sendPasswordResetEmail } from "@/services/AuthService"
 import type {
   Profile, UserSettingsRow,
   NotificationPrefs, ProfileForm,
-} from "@/schemas/Setting"
+} from "@/types/SettingsTypes"
 
 export async function getProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase

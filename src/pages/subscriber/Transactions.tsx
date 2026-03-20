@@ -1,137 +1,145 @@
-import { useState, useEffect, useCallback } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
+import { useState, useEffect, useRef } from "react"
 import { useAuth } from "@/hooks/useAuth"
 import { useToast } from "@/hooks/useToast"
+import { useAccountStore } from "@/stores/useAccountStore"
 import {
-  transactionSchema, type TransactionForm,
-  type Account, TRANSACTION_CATEGORIES,
-} from "@/types/Accounts"
-import {
-  getAccounts, getTransactions, createTransaction,
-  deleteTransaction, getMonthSummary,
-  type TransactionWithAccount,
+  getTransactions, deleteTransaction,
+  getMonthSummary, type TransactionWithAccount,
+  type TransactionFilters,
 } from "@/services/AccountService"
-import SettingsSelect from "@/components/customs/SettingsSelect"
-import SpinnerBtn from "@/components/customs/SpinnerBtn"
 import {
-  Plus, TrendingUp, TrendingDown, ArrowLeftRight,
-  Trash2, X, Wallet, Building2, CreditCard, Smartphone,
-} from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
+  TRANSACTION_TYPE_ICONS, TRANSACTION_TYPE_COLORS,
+  TRANSACTION_AMOUNT_COLORS, TRANSACTION_AMOUNT_PREFIX,
+  ACCOUNT_TYPE_ICONS,
+} from "@/config/subscriber"
+import { formatDate, currentMonthLabel } from "@/lib/utils"
+import SummaryCard from "@/components/customs/SummaryCard"
+import Pagination from "@/components/customs/Pagination"
+import { TrendingDown, Trash2, Search, X, SlidersHorizontal } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+const PAGE_SIZE     = 5
+const CURRENT_MONTH = new Date().getMonth() + 1
+const CURRENT_YEAR  = new Date().getFullYear()
 
-const TYPE_ICONS = {
-  income:   TrendingUp,
-  expense:  TrendingDown,
-  transfer: ArrowLeftRight,
+type DatePreset = "today" | "week" | "month" | "all"
+type TypeFilter = "all" | "income" | "expense" | "transfer"
+
+const DATE_PRESETS: { value: DatePreset; label: string }[] = [
+  { value: "today", label: "Today"      },
+  { value: "week",  label: "This week"  },
+  { value: "month", label: "This month" },
+  { value: "all",   label: "All time"   },
+]
+
+const TYPE_OPTIONS: { value: TypeFilter; label: string }[] = [
+  { value: "all",      label: "All types" },
+  { value: "expense",  label: "Expenses"  },
+  { value: "income",   label: "Income"    },
+  { value: "transfer", label: "Transfers" },
+]
+
+function getDateBounds(preset: DatePreset): { from?: string; to?: string } {
+  const now   = new Date()
+  const today = now.toISOString().split("T")[0]
+
+  if (preset === "today") return { from: today, to: today }
+
+  if (preset === "week") {
+    const start = new Date(now)
+    start.setDate(now.getDate() - now.getDay())
+    return { from: start.toISOString().split("T")[0], to: today }
+  }
+
+  if (preset === "month") {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1)
+    return { from: start.toISOString().split("T")[0], to: today }
+  }
+
+  return {}
 }
-
-const TYPE_COLORS = {
-  income:   "text-emerald-600 bg-emerald-50",
-  expense:  "text-red-500 bg-red-50",
-  transfer: "text-sky-600 bg-sky-50",
-}
-
-const ACCOUNT_ICONS = {
-  bank:    Building2,
-  debit:   CreditCard,
-  ewallet: Smartphone,
-  cash:    Wallet,
-}
-
-function formatDate(dateStr: string) {
-  const d         = new Date(dateStr + "T00:00:00")
-  const today     = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(today.getDate() - 1)
-
-  if (d.toDateString() === today.toDateString())     return "Today"
-  if (d.toDateString() === yesterday.toDateString()) return "Yesterday"
-  return d.toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })
-}
-
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function Transactions() {
   const { user }  = useAuth()
   const { toast } = useToast()
 
-  const now = new Date()
+  const accounts        = useAccountStore((s) => s.accounts)
+  const refreshAccounts = useAccountStore((s) => s.refresh)
+  const lastAdded       = useAccountStore((s) => s.lastAdded)
 
   const [transactions, setTransactions] = useState<TransactionWithAccount[]>([])
-  const [accounts,     setAccounts]     = useState<Account[]>([])
+  const [total,        setTotal]        = useState(0)
+  const [totalPages,   setTotalPages]   = useState(1)
   const [loading,      setLoading]      = useState(true)
-  const [showModal,    setShowModal]    = useState(false)
-  const [filterType,   setFilterType]   = useState<string>("all")
   const [summary,      setSummary]      = useState({ income: 0, expenses: 0, net: 0 })
 
-  const form = useForm<TransactionForm>({
-    resolver: zodResolver(transactionSchema),
-    defaultValues: {
-      account_id:    "",
-      amount:        undefined,
-      type:          "expense",
-      category:      "",
-      note:          "",
-      date:          now.toISOString().split("T")[0],
-      to_account_id: "",
-    },
-  })
+  const [page,          setPage]          = useState(1)
+  const [search,        setSearch]        = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
+  const [datePreset,    setDatePreset]    = useState<DatePreset>("today")
+  const [typeFilter,    setTypeFilter]    = useState<TypeFilter>("all")
 
-  const watchType      = form.watch("type")
-  const watchAccountId = form.watch("account_id")
-
-  // ── Load ──────────────────────────────────────────────────────────────────
-
-  // ✅ stable with useCallback — won't recreate on every render
-  const load = useCallback(async () => {
-    if (!user) return
-    setLoading(true)
-    const [txns, accs, sum] = await Promise.all([
-      getTransactions(user.id, { limit: 50 }),
-      getAccounts(user.id),
-      getMonthSummary(user.id, now.getMonth() + 1, now.getFullYear()),
-    ])
-    setTransactions(txns)
-    setAccounts(accs)
-    setSummary(sum)
-    setLoading(false)
-  }, [user])
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    load()
-  }, [load])
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      setDebouncedSearch(search)
+      setPage(1)
+    }, 400)
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+  }, [search])
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
-
-  const openCreate = () => {
-    form.reset({
-      account_id:    accounts[0]?.id ?? "",
-      amount:        undefined,
-      type:          "expense",
-      category:      "",
-      note:          "",
-      date:          new Date().toISOString().split("T")[0],
-      to_account_id: "",
-    })
-    setShowModal(true)
-  }
-
-  const onSubmit = async (data: TransactionForm) => {
+  useEffect(() => {
     if (!user) return
-    const { error } = await createTransaction(user.id, data)
-    if (error) {
-      toast({ type: "error", title: "Failed", description: error })
-      return
+    let cancelled = false
+
+    const run = async () => {
+      setLoading(true)
+      const bounds = getDateBounds(datePreset)
+      const filters: TransactionFilters = {
+        page:     page,
+        pageSize: PAGE_SIZE,
+        search:   debouncedSearch || undefined,
+        type:     typeFilter === "all" ? undefined : typeFilter,
+        ...bounds,
+      }
+
+      const [result, sum] = await Promise.all([
+        getTransactions(user.id, filters),
+        getMonthSummary(user.id, CURRENT_MONTH, CURRENT_YEAR),
+      ])
+
+      if (cancelled) return
+      setTransactions(result.data)
+      setTotal(result.total)
+      setTotalPages(result.totalPages)
+      setSummary(sum)
+      setLoading(false)
     }
-    toast({ type: "success", title: "Transaction added" })
-    setShowModal(false)
-    load()  // ✅ reloads both transactions AND accounts (balances update)
+
+    run()
+    return () => { cancelled = true }
+  }, [user, page, debouncedSearch, typeFilter, datePreset, lastAdded])
+
+  const reload = async () => {
+    if (!user) return
+    const bounds = getDateBounds(datePreset)
+    const filters: TransactionFilters = {
+      page:     page,
+      pageSize: PAGE_SIZE,
+      search:   debouncedSearch || undefined,
+      type:     typeFilter === "all" ? undefined : typeFilter,
+      ...bounds,
+    }
+    const [result, sum] = await Promise.all([
+      getTransactions(user.id, filters),
+      getMonthSummary(user.id, CURRENT_MONTH, CURRENT_YEAR),
+    ])
+    setTransactions(result.data)
+    setTotal(result.total)
+    setTotalPages(result.totalPages)
+    setSummary(sum)
   }
 
   const handleDelete = async (id: string) => {
@@ -140,100 +148,135 @@ export default function Transactions() {
       toast({ type: "error", title: "Failed to delete", description: error })
     } else {
       toast({ type: "info", title: "Transaction removed" })
-      load()  // ✅ reloads both so balances reflect deletion
+      if (user) refreshAccounts(user.id)
+      reload()
     }
   }
 
-  // ── Filtered + Grouped ────────────────────────────────────────────────────
+  const handleDatePreset = (val: DatePreset) => {
+    setDatePreset(val)
+    setPage(1)
+  }
 
-  const filtered = transactions.filter((t) =>
-    filterType === "all" ? true : t.type === filterType
-  )
+  const handleTypeFilter = (val: TypeFilter) => {
+    setTypeFilter(val)
+    setPage(1)
+  }
 
-  const grouped = filtered.reduce<Record<string, TransactionWithAccount[]>>((acc, t) => {
+  const handleReset = () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    setSearch("")
+    setDebouncedSearch("")
+    setDatePreset("today")
+    setTypeFilter("all")
+    setPage(1)
+  }
+
+  const grouped = transactions.reduce<Record<string, TransactionWithAccount[]>>((acc, t) => {
     const key = formatDate(t.date)
     if (!acc[key]) acc[key] = []
     acc[key].push(t)
     return acc
   }, {})
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  const hasActiveFilters = typeFilter !== "all" || debouncedSearch !== "" || datePreset !== "today"
 
   return (
     <div className="page-reveal">
 
-      {/* Header */}
       <div className="flex items-end justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-stone-900 tracking-tight">Transactions</h1>
-          <p className="mono text-[11px] text-stone-400 mt-1">
-            {now.toLocaleDateString("en-PH", { month: "long", year: "numeric" })}
-          </p>
+          <p className="mono text-[11px] text-stone-400 mt-1">{currentMonthLabel()}</p>
         </div>
-        <Button
-          onClick={openCreate}
-          disabled={accounts.length === 0}
-          className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-4"
-        >
-          <Plus size={13} /> Add transaction
-        </Button>
+        {!loading && (
+          <p className="mono text-[11px] text-stone-400">
+            {total.toLocaleString()} total
+          </p>
+        )}
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-4 mb-5">
-        <div className="bg-white rounded-2xl border border-stone-200 border-t-2 border-t-emerald-400 p-4 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
-          <p className="mono text-[10px] uppercase tracking-[0.12em] text-stone-400 mb-2">Income</p>
-          <p className="text-[22px] font-semibold text-stone-900 tracking-tight">
-            ₱{summary.income.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-          </p>
-        </div>
-        <div className="bg-white rounded-2xl border border-stone-200 border-t-2 border-t-red-400 p-4 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
-          <p className="mono text-[10px] uppercase tracking-[0.12em] text-stone-400 mb-2">Expenses</p>
-          <p className="text-[22px] font-semibold text-stone-900 tracking-tight">
-            ₱{summary.expenses.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-          </p>
-        </div>
-        <div className={cn(
-          "bg-white rounded-2xl border border-stone-200 border-t-2 p-4 shadow-[0_2px_16px_rgba(0,0,0,0.04)]",
-          summary.net >= 0 ? "border-t-emerald-400" : "border-t-red-400"
-        )}>
-          <p className="mono text-[10px] uppercase tracking-[0.12em] text-stone-400 mb-2">Net</p>
-          <p className={cn(
-            "text-[22px] font-semibold tracking-tight",
-            summary.net >= 0 ? "text-emerald-600" : "text-red-500"
-          )}>
-            {summary.net >= 0 ? "+" : ""}₱{Math.abs(summary.net).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-          </p>
-        </div>
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <SummaryCard label="Income"   value={summary.income}   accentColor="border-t-emerald-400" />
+        <SummaryCard label="Expenses" value={summary.expenses} accentColor="border-t-red-400" />
+        <SummaryCard
+          label="Net"
+          value={summary.net}
+          accentColor={summary.net >= 0 ? "border-t-emerald-400" : "border-t-red-400"}
+          valueClass={summary.net >= 0 ? "text-emerald-600" : "text-red-500"}
+        />
       </div>
 
-      {/* Filter tabs */}
-      <div className="flex items-center gap-1.5 mb-4">
-        {[
-          { value: "all",      label: "All"       },
-          { value: "expense",  label: "Expenses"  },
-          { value: "income",   label: "Income"    },
-          { value: "transfer", label: "Transfers" },
-        ].map(({ value, label }) => (
-          <button
-            key={value}
-            onClick={() => setFilterType(value)}
-            className={cn(
-              "mono text-[11px] px-3 py-1.5 rounded-lg transition-colors",
-              filterType === value
-                ? "bg-emerald-50 text-emerald-700"
-                : "text-stone-500 hover:text-stone-700 hover:bg-stone-50"
+      <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-4 mb-4">
+        <div className="flex items-center gap-3 flex-wrap">
+
+          <div className="relative flex-1 min-w-[200px]">
+            <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search note or category..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full h-9 pl-8 pr-8 text-[12px] bg-stone-50 border border-stone-200 rounded-xl text-stone-800 placeholder:text-stone-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-colors mono"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-300 hover:text-stone-600 transition-colors"
+              >
+                <X size={11} />
+              </button>
             )}
-          >
-            {label}
-          </button>
-        ))}
+          </div>
+
+          <div className="relative">
+            <select
+              value={datePreset}
+              onChange={(e) => handleDatePreset(e.target.value as DatePreset)}
+              className="h-9 pl-3 pr-8 text-[12px] mono bg-stone-50 border border-stone-200 rounded-xl text-stone-700 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-colors appearance-none cursor-pointer"
+            >
+              {DATE_PRESETS.map(({ value, label }) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </span>
+          </div>
+
+          <div className="relative">
+            <select
+              value={typeFilter}
+              onChange={(e) => handleTypeFilter(e.target.value as TypeFilter)}
+              className="h-9 pl-3 pr-8 text-[12px] mono bg-stone-50 border border-stone-200 rounded-xl text-stone-700 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-colors appearance-none cursor-pointer"
+            >
+              {TYPE_OPTIONS.map(({ value, label }) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </span>
+          </div>
+
+          {hasActiveFilters && (
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-1.5 h-9 px-3 mono text-[11px] text-stone-500 hover:text-red-500 hover:bg-red-50 border border-stone-200 hover:border-red-200 rounded-xl transition-colors"
+            >
+              <SlidersHorizontal size={11} /> Reset
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Transaction list */}
       {loading ? (
         <div className="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-50 overflow-hidden">
-          {[1, 2, 3, 4, 5].map((i) => (
+          {Array.from({ length: PAGE_SIZE }).map((_, i) => (
             <div key={i} className="flex items-center gap-3 p-4 animate-pulse">
               <div className="w-9 h-9 bg-stone-100 rounded-xl shrink-0" />
               <div className="flex-1">
@@ -244,236 +287,100 @@ export default function Transactions() {
             </div>
           ))}
         </div>
-      ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-stone-200 p-12 text-center">
-          <TrendingDown size={32} className="text-stone-300 mx-auto mb-3" />
-          <p className="text-[14px] font-medium text-stone-600">No transactions yet</p>
-          <p className="mono text-[11px] text-stone-400 mt-1 mb-4">
+      ) : transactions.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-stone-200 p-14 text-center">
+          <TrendingDown size={32} className="text-stone-200 mx-auto mb-3" />
+          <p className="text-[14px] font-medium text-stone-600">
+            {debouncedSearch
+              ? "No results found"
+              : datePreset === "today"
+              ? "No transactions today"
+              : "No transactions found"
+            }
+          </p>
+          <p className="mono text-[11px] text-stone-400 mt-1.5">
             {accounts.length === 0
               ? "Add an account first, then start tracking"
-              : "Add your first transaction to get started"
+              : debouncedSearch
+              ? `Nothing matches "${debouncedSearch}"`
+              : "Try a different date range or filter"
             }
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
-          {Object.entries(grouped).map(([dateLabel, txns]) => (
-            <div key={dateLabel}>
-              <div className="px-5 py-2 bg-stone-50 border-b border-stone-100">
-                <p className="mono text-[10px] text-stone-400 uppercase tracking-[0.1em]">{dateLabel}</p>
-              </div>
-              {txns.map((t) => {
-                const Icon    = TYPE_ICONS[t.type]
-                const AccIcon = ACCOUNT_ICONS[t.account?.type ?? "cash"]
-                const isExpense  = t.type === "expense"
-                const isIncome   = t.type === "income"
-                const isTransfer = t.type === "transfer"
-
-                return (
-                  <div
-                    key={t.id}
-                    className="flex items-center gap-3 px-5 py-3.5 border-b border-stone-50 last:border-0 hover:bg-stone-50/50 transition-colors group"
-                  >
-                    <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", TYPE_COLORS[t.type])}>
-                      <Icon size={15} />
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-medium text-stone-800 truncate">
-                        {t.note || t.category || t.type}
-                      </p>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <AccIcon size={9} className="text-stone-400" />
-                        {/* ✅ Show "From → To" for transfers */}
-                        {isTransfer ? (
-                          <p className="mono text-[10px] text-stone-400">
-                            {t.account?.name}
-                            {t.to_account?.name && (
-                              <span> → {t.to_account.name}</span>
-                            )}
-                          </p>
-                        ) : (
-                          <>
-                            <p className="mono text-[10px] text-stone-400">{t.account?.name}</p>
-                            {t.category && (
-                              <>
-                                <span className="text-stone-300">·</span>
-                                <p className="mono text-[10px] text-stone-400">{t.category}</p>
-                              </>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="text-right shrink-0">
-                      <p className={cn(
-                        "mono text-[13px] font-medium",
-                        isIncome   ? "text-emerald-600" :
-                        isExpense  ? "text-stone-800"   :
-                                     "text-sky-600"
-                      )}>
-                        {isIncome ? "+" : isExpense ? "−" : ""}
-                        ₱{t.amount.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => handleDelete(t.id)}
-                      className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-200 hover:text-red-400 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+        <>
+          <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
+            {Object.entries(grouped).map(([dateLabel, txns]) => (
+              <div key={dateLabel}>
+                <div className="px-5 py-2 bg-stone-50 border-b border-stone-100 flex items-center justify-between">
+                  <p className="mono text-[10px] text-stone-400 uppercase tracking-[0.1em]">{dateLabel}</p>
+                  <p className="mono text-[10px] text-stone-300">{txns.length} item{txns.length !== 1 ? "s" : ""}</p>
+                </div>
+                {txns.map((t) => {
+                  const Icon       = TRANSACTION_TYPE_ICONS[t.type]
+                  const AccIcon    = ACCOUNT_TYPE_ICONS[t.account?.type ?? "cash"]
+                  const isTransfer = t.type === "transfer"
+                  return (
+                    <div
+                      key={t.id}
+                      className="flex items-center gap-3 px-5 py-3.5 border-b border-stone-50 last:border-0 hover:bg-stone-50/50 transition-colors group"
                     >
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
-                )
-              })}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* ── Add transaction modal ── */}
-      {showModal && (
-        <div
-          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
-          onClick={(e) => e.target === e.currentTarget && setShowModal(false)}
-        >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-stone-100">
-              <h2 className="text-[15px] font-semibold text-stone-900">Add transaction</h2>
-              <button
-                onClick={() => setShowModal(false)}
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-50"
-              >
-                <X size={14} />
-              </button>
-            </div>
-
-            <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 py-5 flex flex-col gap-4">
-
-              {/* Type toggle */}
-              <div className="flex gap-1 p-1 bg-stone-100 rounded-xl">
-                {(["expense", "income", "transfer"] as const).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => form.setValue("type", t)}
-                    className={cn(
-                      "flex-1 py-1.5 rounded-lg text-[12px] font-medium transition-all capitalize",
-                      watchType === t
-                        ? "bg-white text-stone-900 shadow-sm"
-                        : "text-stone-500 hover:text-stone-700"
-                    )}
-                  >
-                    {t}
-                  </button>
-                ))}
+                      <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", TRANSACTION_TYPE_COLORS[t.type])}>
+                        <Icon size={15} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-medium text-stone-800 truncate">
+                          {t.note || t.category || t.type}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <AccIcon size={9} className="text-stone-400" />
+                          {isTransfer ? (
+                            <p className="mono text-[10px] text-stone-400">
+                              {t.account?.name}
+                              {t.to_account?.name && <span> → {t.to_account.name}</span>}
+                            </p>
+                          ) : (
+                            <>
+                              <p className="mono text-[10px] text-stone-400">{t.account?.name}</p>
+                              {t.category && (
+                                <>
+                                  <span className="text-stone-300">·</span>
+                                  <p className="mono text-[10px] text-stone-400">{t.category}</p>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className={cn("mono text-[13px] font-medium", TRANSACTION_AMOUNT_COLORS[t.type])}>
+                          {TRANSACTION_AMOUNT_PREFIX[t.type]}₱{t.amount.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                        </p>
+                        <p className="mono text-[9px] text-stone-300 mt-0.5">
+                          {new Date(t.date + "T00:00:00").toLocaleDateString("en-PH", { month: "short", day: "numeric" })}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleDelete(t.id)}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-200 hover:text-red-400 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  )
+                })}
               </div>
-
-              {/* Amount */}
-              <div className="flex flex-col gap-1.5">
-                <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Amount</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 mono text-[12px] text-stone-400">₱</span>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    className={cn(
-                      "h-10 text-sm bg-stone-50 border-stone-200 pl-7 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20",
-                      form.formState.errors.amount && "border-red-300"
-                    )}
-                    {...form.register("amount", { valueAsNumber: true })}
-                  />
-                </div>
-                {form.formState.errors.amount && (
-                  <p className="mono text-[10px] text-red-400">— {form.formState.errors.amount.message}</p>
-                )}
-              </div>
-
-              {/* From account */}
-              <SettingsSelect
-                label={watchType === "transfer" ? "From account" : "Account"}
-                error={form.formState.errors.account_id?.message}
-                {...form.register("account_id")}
-              >
-                <option value="">Select account</option>
-                {accounts.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name} · ₱{a.balance.toLocaleString()}
-                  </option>
-                ))}
-              </SettingsSelect>
-
-              {/* Transfer — destination account */}
-              {watchType === "transfer" && (
-                <SettingsSelect
-                  label="To account"
-                  error={form.formState.errors.to_account_id?.message}
-                  {...form.register("to_account_id")}
-                >
-                  <option value="">Select destination</option>
-                  {accounts
-                    .filter((a) => a.id !== watchAccountId)  // ✅ excludes source account
-                    .map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.name} · ₱{a.balance.toLocaleString()}
-                      </option>
-                    ))
-                  }
-                </SettingsSelect>
-              )}
-
-              {/* Category — hidden for transfers */}
-              {watchType !== "transfer" && (
-                <SettingsSelect label="Category" {...form.register("category")}>
-                  <option value="">No category</option>
-                  {TRANSACTION_CATEGORIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </SettingsSelect>
-              )}
-
-              {/* Note + Date */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1.5">
-                  <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Note</Label>
-                  <Input
-                    placeholder="Optional"
-                    className="h-10 text-sm bg-stone-50 border-stone-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20"
-                    {...form.register("note")}
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Date</Label>
-                  <Input
-                    type="date"
-                    className="h-10 text-sm bg-stone-50 border-stone-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20"
-                    {...form.register("date")}
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-2 justify-end pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowModal(false)}
-                  className="text-[12px] h-9 border-stone-200 text-stone-600"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={form.formState.isSubmitting}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-5"
-                >
-                  {form.formState.isSubmitting ? <SpinnerBtn label="Adding" /> : "Add transaction"}
-                </Button>
-              </div>
-            </form>
+            ))}
           </div>
-        </div>
+
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            pageSize={PAGE_SIZE}
+            onChange={setPage}
+          />
+        </>
       )}
     </div>
   )

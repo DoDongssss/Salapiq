@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { forgotPasswordSchema, type ForgotPasswordForm } from "@/schemas/Auth"
+import { forgotPasswordSchema, type ForgotPasswordForm } from "@/types/AuthTypes"
 import { useState } from "react"
 import { ArrowLeft, ArrowRight, MailCheck, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"

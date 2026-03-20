@@ -1,4 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from "react"
+import { useAuthStore } from "@/stores/useAuthStore"
 import Home from './pages/Home'
 import AuthLayout from './pages/layouts/AuthLayout'
 import Login from './pages/auth/Login'
@@ -7,13 +9,19 @@ import ForgetPassword from './pages/auth/ForgetPassword'
 import VerifyEmail from './pages/auth/VerifyEmail'
 import AuthCallback from './pages/auth/AuthCallback'
 import SubscriberLayout from './pages/layouts/SubscriberLayout'
-import Dashboard from './pages/subscriber/dashboard'
+import Dashboard from './pages/subscriber/Dashboard'
 import Accounts from './pages/subscriber/Accounts'
 import Transactions from './pages/subscriber/Transactions'
-import Settings from './pages/subscriber/settings'
-import FamilyShell from './pages/subscriber/FamilyShell'
+import Settings from './pages/subscriber/Settings'
+import FamilyShell from './pages/subscriber/Family'
 
 function App() {
+  const init = useAuthStore((s) => s.init)
+
+  useEffect(() => {
+    init()
+  }, [init])
+
   return (
     <Router>
       <Routes>

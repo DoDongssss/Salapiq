@@ -86,30 +86,6 @@ const insights = [
 export default function Dashboard() {
   return (
     <div className="page-reveal">
-      <style>{`
-        .mono { font-family: 'Geist Mono', monospace; }
-        .card-reveal { animation: cardReveal 0.45s cubic-bezier(0.22,1,0.36,1) both; }
-        .card-reveal:nth-child(1) { animation-delay: 0.00s; }
-        .card-reveal:nth-child(2) { animation-delay: 0.06s; }
-        .card-reveal:nth-child(3) { animation-delay: 0.12s; }
-        .card-reveal:nth-child(4) { animation-delay: 0.18s; }
-        @keyframes cardReveal {
-          from { opacity:0; transform:translateY(12px); }
-          to   { opacity:1; transform:translateY(0); }
-        }
-        .bar-fill {
-          animation: barGrow 0.8s cubic-bezier(0.22,1,0.36,1) 0.3s both;
-          transform-origin: left;
-        }
-        @keyframes barGrow {
-          from { transform: scaleX(0); }
-          to   { transform: scaleX(1); }
-        }
-        .page-reveal { animation: pageReveal 0.35s ease both; }
-        @keyframes pageReveal { from { opacity:0; } to { opacity:1; } }
-      `}</style>
-
-      {/* Page header */}
       <div className="flex items-end justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-stone-900 tracking-tight leading-tight">
@@ -123,7 +99,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── Stat cards ── */}
       <div className="grid grid-cols-4 gap-4 mb-5">
         {stats.map(({ label, value, sub, trend, up, accent, icon: Icon, iconBg, iconColor }) => (
           <div
@@ -156,10 +131,8 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* ── Main grid: Transactions + Budget ── */}
       <div className="grid grid-cols-[1fr_360px] gap-5 mb-5">
 
-        {/* Recent transactions */}
         <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] overflow-hidden">
           <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-stone-50">
             <h2 className="text-[13px] font-semibold text-stone-900">Recent transactions</h2>
@@ -188,7 +161,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Budget progress */}
         <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
           <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-stone-50">
             <h2 className="text-[13px] font-semibold text-stone-900">Budget progress</h2>
@@ -222,10 +194,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── Bottom grid: Savings + AI Insights ── */}
       <div className="grid grid-cols-[360px_1fr] gap-5">
 
-        {/* Savings goals */}
         <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
           <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-stone-50">
             <h2 className="text-[13px] font-semibold text-stone-900">Savings goals</h2>
@@ -262,7 +232,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* AI category insights */}
         <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
           <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-stone-50">
             <div className="flex items-center gap-2">
@@ -278,7 +247,6 @@ export default function Dashboard() {
           </div>
 
           <div className="p-5">
-            {/* Stacked bar */}
             <div className="flex h-2.5 rounded-full overflow-hidden mb-5 gap-px">
               {insights.map(({ label, pct, color }) => (
                 <div
@@ -290,7 +258,6 @@ export default function Dashboard() {
               ))}
             </div>
 
-            {/* Insight cards */}
             <div className="grid grid-cols-2 gap-3 mb-4">
               {insights.map(({ label, pct, amount, color }) => (
                 <div key={label} className="rounded-xl bg-stone-50 border border-stone-100 p-4">
@@ -309,7 +276,6 @@ export default function Dashboard() {
               ))}
             </div>
 
-            {/* AI tip */}
             <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 flex items-start gap-2.5">
               <Sparkles size={13} className="text-emerald-500 shrink-0 mt-0.5" />
               <p className="text-[12px] text-emerald-700 leading-relaxed font-light">

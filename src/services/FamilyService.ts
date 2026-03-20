@@ -1,40 +1,10 @@
 import { supabase } from "@/lib/supabaseClient"
+import type {
+  Family, FamilyMember, FamilyWithMembers, CreateFamilyForm,
+} from "@/types/FamilyTypes"
+import type { TransactionWithAccount } from "./AccountService"
 
-export type Family = {
-  id:          string
-  name:        string
-  description: string | null
-  invite_code: string
-  created_by:  string
-  avatar_url:  string | null
-  currency:    string
-  created_at:  string
-  updated_at:  string
-}
-
-export type FamilyMember = {
-  id:        string
-  family_id: string
-  user_id:   string
-  role:      "admin" | "member"
-  joined_at: string
-  profile: {
-    full_name:  string
-    username:   string | null
-    avatar_url: string | null
-    email:      string | null
-  }
-}
-
-export type FamilyWithMembers = Family & {
-  members: FamilyMember[]
-}
-
-export type CreateFamilyForm = {
-  name:         string
-  description?: string
-  currency?:    string
-}
+export type { Family, FamilyMember, FamilyWithMembers, CreateFamilyForm }
 
 export async function getMyFamily(userId: string): Promise<Family | null> {
   const { data, error } = await supabase
@@ -44,7 +14,9 @@ export async function getMyFamily(userId: string): Promise<Family | null> {
     .maybeSingle()
 
   if (error || !data) return null
-  return (data as any).families as Family
+
+  const row = data as unknown as { family_id: string; families: Family }
+  return row.families
 }
 
 export async function getFamilyWithMembers(
@@ -231,36 +203,77 @@ export async function unlinkAccountFromFamily(
   return error ? error.message : null
 }
 
+export type FamilyTransactionFilters = {
+  type?:     "income" | "expense" | "transfer"
+  search?:   string
+  page?:     number
+  pageSize?: number
+}
+ 
+export type PaginatedFamilyTransactions = {
+  data:       TransactionWithAccount[]
+  total:      number
+  totalPages: number
+  page:       number
+  pageSize:   number
+}
+ 
 export async function getFamilyTransactions(
   familyId: string,
-  options?: { limit?: number; from?: string; to?: string }
-) {
+  filters:  FamilyTransactionFilters = {}
+): Promise<PaginatedFamilyTransactions> {
+  const {
+    type,
+    search,
+    page     = 1,
+    pageSize = 10,
+  } = filters
+ 
+  // ✅ get shared account IDs first
   const { data: sharedAccounts } = await supabase
     .from("accounts")
     .select("id")
     .eq("family_id", familyId)
     .eq("is_active", true)
-
-  if (!sharedAccounts || sharedAccounts.length === 0) return []
-
+ 
+  if (!sharedAccounts || sharedAccounts.length === 0) {
+    return { data: [], total: 0, totalPages: 0, page, pageSize }
+  }
+ 
   const sharedAccountIds = sharedAccounts.map((a) => a.id)
-
+  const from_idx         = (page - 1) * pageSize
+  const to_idx           = from_idx + pageSize - 1
+ 
   let query = supabase
     .from("transactions")
-    .select(`
-      *,
+    .select(
+      `*,
       account:accounts!transactions_account_id_fkey(name, color, icon, type, family_id),
-      to_account:accounts!transactions_to_account_id_fkey(name, color, icon, type)
-    `)
+      to_account:accounts!transactions_to_account_id_fkey(name, color, icon, type)`,
+      { count: "exact" }
+    )
     .in("account_id", sharedAccountIds)
     .order("date",       { ascending: false })
     .order("created_at", { ascending: false })
-
-  if (options?.from)  query = query.gte("date", options.from)
-  if (options?.to)    query = query.lte("date", options.to)
-  if (options?.limit) query = query.limit(options.limit)
-
-  const { data, error } = await query
-  if (error) return []
-  return data
+    .range(from_idx, to_idx)
+ 
+  if (type)   query = query.eq("type", type)
+  if (search?.trim()) {
+    query = query.or(`note.ilike.%${search.trim()}%,category.ilike.%${search.trim()}%`)
+  }
+ 
+  const { data, error, count } = await query
+ 
+  if (error) return { data: [], total: 0, totalPages: 0, page, pageSize }
+ 
+  const total      = count ?? 0
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+ 
+  return {
+    data:       (data ?? []) as TransactionWithAccount[],
+    total,
+    totalPages,
+    page,
+    pageSize,
+  }
 }
