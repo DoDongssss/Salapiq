@@ -142,7 +142,7 @@ export default function Settings() {
       toast({ type: "error", title: "Email update failed", description: error })
     } else {
       toast({ type: "info", title: "Confirm your new email", description: "Check both inboxes to confirm the change." })
-      emailForm.reset()
+    emailForm.reset()
     }
   }
 
