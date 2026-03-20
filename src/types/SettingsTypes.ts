@@ -1,7 +1,5 @@
 import { z } from "zod"
 
-// ─── Profile row (mirrors public.profiles) ────────────────────
-
 export type Profile = {
   id:             string
   full_name:      string
@@ -21,8 +19,6 @@ export type Profile = {
   updated_at:     string
 }
 
-// ─── User settings row (mirrors public.user_settings) ─────────
-
 export type UserSettingsRow = {
   id:                   string
   notif_weekly_report:  boolean
@@ -36,16 +32,12 @@ export type UserSettingsRow = {
   date_format:          string
 }
 
-// ─── Notification prefs (JS-friendly keys) ────────────────────
-
 export type NotificationPrefs = {
   weeklyReport:  boolean
   budgetAlerts:  boolean
   goalReminders: boolean
   loginAlerts:   boolean
 }
-
-// ─── Profile form schema ──────────────────────────────────────
 
 export const profileSchema = z.object({
   full_name:      z.string().min(2, "at least 2 characters"),
@@ -59,8 +51,6 @@ export const profileSchema = z.object({
 })
 
 export type ProfileForm = z.infer<typeof profileSchema>
-
-// ─── Update email schema ──────────────────────────────────────
 
 export const updateEmailSchema = z.object({
   email: z.string().min(1, "required").email("invalid email"),

@@ -7,14 +7,14 @@ import {
   profileSchema, updateEmailSchema,
   type Profile, type ProfileForm,
   type UpdateEmailForm, type NotificationPrefs,
-} from "@/schemas/Setting"
+} from "@/types/SettingsTypes"
 import {
   getProfile, updateProfile, uploadAvatar,
   updateEmail, resendVerificationEmail, resetPassword,
   updateAiOptIn, clearLocalAiData,
   saveNotificationPrefs, getUserSettings,
   updateAppPreferences, extractNotificationPrefs,
-} from "@/services/settingService"
+} from "@/services/SettingsService"
 import {
   SETTINGS_TABS, CURRENCIES, TIMEZONES,
   THEMES, LANGUAGES, DATE_FORMATS,
@@ -58,8 +58,6 @@ export default function Settings() {
   const [language,          setLanguage]          = useState("en")
   const [dateFormat,        setDateFormat]        = useState("MM/DD/YYYY")
   const [savingPrefs,       setSavingPrefs]       = useState(false)
-
-  // ── Forms — declared BEFORE useEffect ─────────────────────
 
   const profileForm = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
@@ -144,7 +142,7 @@ export default function Settings() {
       toast({ type: "error", title: "Email update failed", description: error })
     } else {
       toast({ type: "info", title: "Confirm your new email", description: "Check both inboxes to confirm the change." })
-      emailForm.reset()
+    emailForm.reset()
     }
   }
 

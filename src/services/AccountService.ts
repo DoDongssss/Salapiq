@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabaseClient"
-import type { Account, AccountForm, Transaction, TransactionForm } from "@/types/Accounts"
+import type { Account, AccountForm, Transaction, TransactionForm } from "@/types/AccountTypes"
 
 export async function getAccounts(userId: string): Promise<Account[]> {
   const { data, error } = await supabase
@@ -78,40 +78,77 @@ export type TransactionWithAccount = Transaction & {
   member?:    { full_name: string; avatar_url: string | null } | null
 }
 
+export type TransactionFilters = {
+  type?:     "income" | "expense" | "transfer"
+  from?:     string
+  to?:       string
+  search?:   string
+  page?:     number
+  pageSize?: number
+}
+ 
+export type PaginatedTransactions = {
+  data:       TransactionWithAccount[]
+  total:      number
+  totalPages: number
+  page:       number
+  pageSize:   number
+}
+ 
 export async function getTransactions(
-  userId: string,
-  options?: {
-    accountId?: string
-    limit?: number
-    offset?: number
-    from?: string
-    to?: string
-    type?: "income" | "expense" | "transfer"
-    category?: string
-  }
-): Promise<TransactionWithAccount[]> {
-    let query = supabase
+  userId:  string,
+  filters: TransactionFilters = {}
+): Promise<PaginatedTransactions> {
+  const {
+    type,
+    from,
+    to,
+    search,
+    page     = 1,
+    pageSize = 10,
+  } = filters
+ 
+  const from_idx = (page - 1) * pageSize
+  const to_idx   = from_idx + pageSize - 1
+ 
+  let query = supabase
     .from("transactions")
-    .select(`
-        *,
-        account:accounts!transactions_account_id_fkey(name, color, icon, type),
-        to_account:accounts!transactions_to_account_id_fkey(name, color, icon, type)
-    `)
+    .select(
+      `*,
+      account:accounts!transactions_account_id_fkey(name, color, icon, type),
+      to_account:accounts!transactions_to_account_id_fkey(name, color, icon, type)`,
+      { count: "exact" }   // ✅ get total count from Supabase
+    )
     .eq("user_id", userId)
-    .order("date", { ascending: false })
+    .order("date",       { ascending: false })
     .order("created_at", { ascending: false })
-
-  if (options?.accountId) query = query.eq("account_id", options.accountId)
-  if (options?.type)      query = query.eq("type", options.type)
-  if (options?.category)  query = query.eq("category", options.category)
-  if (options?.from)      query = query.gte("date", options.from)
-  if (options?.to)        query = query.lte("date", options.to)
-  if (options?.limit)     query = query.limit(options.limit)
-  if (options?.offset)    query = query.range(options.offset, (options.offset) + (options.limit ?? 20) - 1)
-
-  const { data, error } = await query
-  if (error) return []
-  return data as TransactionWithAccount[]
+    .range(from_idx, to_idx)  // ✅ server-side pagination
+ 
+  if (type)   query = query.eq("type", type)
+  if (from)   query = query.gte("date", from)
+  if (to)     query = query.lte("date", to)
+ 
+  // ✅ server-side search across note and category
+  if (search?.trim()) {
+    query = query.or(
+      `note.ilike.%${search.trim()}%,category.ilike.%${search.trim()}%`
+    )
+  }
+ 
+  const { data, error, count } = await query
+ 
+  if (error) return { data: [], total: 0, totalPages: 0, page, pageSize }
+ 
+  const total      = count ?? 0
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+ 
+  return {
+    data:       (data ?? []) as TransactionWithAccount[],
+    total,
+    totalPages,
+    page,
+    pageSize,
+  }
 }
 
 export async function createTransaction(
