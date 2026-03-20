@@ -3,61 +3,69 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAuth } from "@/hooks/useAuth"
 import { useToast } from "@/hooks/useToast"
+import { useProfileStore }  from "@/stores/useProfileStore"
+import { useSettingStore } from "@/stores/useSettingStore"
 import {
   profileSchema, updateEmailSchema,
-  type Profile, type ProfileForm,
-  type UpdateEmailForm, type NotificationPrefs,
+  type ProfileForm, type UpdateEmailForm,
 } from "@/types/SettingsTypes"
 import {
-  getProfile, updateProfile, uploadAvatar,
-  updateEmail, resendVerificationEmail, resetPassword,
-  updateAiOptIn, clearLocalAiData,
-  saveNotificationPrefs, getUserSettings,
-  updateAppPreferences, extractNotificationPrefs,
+  uploadAvatar, updateEmail,
+  resendVerificationEmail, resetPassword,
+  clearLocalAiData,
 } from "@/services/SettingsService"
 import {
   SETTINGS_TABS, CURRENCIES, TIMEZONES,
   THEMES, LANGUAGES, DATE_FORMATS,
   NOTIFICATION_ROWS, PRIVACY_ROWS,
 } from "@/config/subscriber"
+import Switch from "@/components/customs/Switch"
 import SettingsSelect from "@/components/customs/SettingsSelect"
-import ProfileFormSkeleton from "@/components/customs/ProfileFormSkeleton"
-import SpinnerBtn from "@/components/customs/SpinnerBtn"
-import VerificationBanner from "@/components/customs/VerificationBanner"
+import {FieldSkeleton} from "@/components/customs/FieldSkeleton"
 import {
   Camera, CheckCircle2, Clock, Mail, Phone,
-  Globe, DollarSign, ChevronRight,
-  Palette, Languages as LanguagesIcon, CalendarDays, Shield,
+  Globe, DollarSign, ChevronRight, Shield,
+  Palette, Languages as LanguagesIcon, CalendarDays,
+  AlertCircle,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-const DEFAULT_NOTIFS: NotificationPrefs = {
-  weeklyReport: true, budgetAlerts: true,
-  goalReminders: true, loginAlerts: true,
-}
-
 export default function Settings() {
-  const { user } = useAuth()
+  const { user }  = useAuth()
   const { toast } = useToast()
 
+  const profile             = useProfileStore((s) => s.profile)
+  const profileLoading      = useProfileStore((s) => s.loading)
+  const profileInitialized  = useProfileStore((s) => s.initialized)
+  const refreshProfile      = useProfileStore((s) => s.refresh)
+  const updateProfile       = useProfileStore((s) => s.update)
+  const getAvatarUrl        = useProfileStore((s) => s.avatarUrl)
+
+  const storeTheme      = useSettingStore((s) => s.theme)
+  const storeLanguage   = useSettingStore((s) => s.language)
+  const storeDateFormat = useSettingStore((s) => s.dateFormat)
+  const storeAiOptIn    = useSettingStore((s) => s.aiOptIn)
+  const storeNotifs     = useSettingStore((s) => s.notifs)
+  const updatePrefs     = useSettingStore((s) => s.updatePrefs)
+  const updateNotifs    = useSettingStore((s) => s.updateNotifs)
+  const updateAiOptIn   = useSettingStore((s) => s.updateAiOptIn)
+
   const [activeTab,         setActiveTab]         = useState("profile")
-  const [profile,           setProfile]           = useState<Profile | null>(null)
-  const [profileLoading,    setProfileLoading]    = useState(true)
-  const [avatarUrl,         setAvatarUrl]         = useState<string | null>(null)
+  const [localAvatarUrl,    setLocalAvatarUrl]    = useState<string | null>(null)
   const [uploadingAvatar,   setUploadingAvatar]   = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteInput,       setDeleteInput]       = useState("")
   const [sendingReset,      setSendingReset]      = useState(false)
-  const [aiOptIn,           setAiOptIn]           = useState(true)
-  const [notifications,     setNotifications]     = useState<NotificationPrefs>(DEFAULT_NOTIFS)
   const [savingNotifs,      setSavingNotifs]      = useState(false)
-  const [theme,             setTheme]             = useState("light")
-  const [language,          setLanguage]          = useState("en")
-  const [dateFormat,        setDateFormat]        = useState("MM/DD/YYYY")
   const [savingPrefs,       setSavingPrefs]       = useState(false)
+  const [localTheme,        setLocalTheme]        = useState(storeTheme)
+  const [localLanguage,     setLocalLanguage]     = useState(storeLanguage)
+  const [localDateFormat,   setLocalDateFormat]   = useState(storeDateFormat)
+  const [localNotifs,       setLocalNotifs]       = useState(storeNotifs)
+  const [localAiOptIn,      setLocalAiOptIn]      = useState(storeAiOptIn)
 
   const profileForm = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
@@ -75,52 +83,25 @@ export default function Settings() {
     resolver: zodResolver(updateEmailSchema),
   })
 
-  const { reset: resetProfile } = profileForm
-
+  // ── Reset form when profile loads from store ──────────────
   useEffect(() => {
-    if (!user) return
-    let cancelled = false
+    if (!profile || profileLoading) return
+    profileForm.reset({
+      full_name:      profile.full_name      ?? "",
+      username:       profile.username       ?? "",
+      phone:          profile.phone          ?? "",
+      monthly_income: profile.monthly_income ?? undefined,
+      currency:       profile.currency       ?? "PHP",
+      timezone:       profile.timezone       ?? "Asia/Manila",
+    }, { keepDirty: false })
+  }, [profile, profileLoading])
 
-    const loadData = async () => {
-      setProfileLoading(true)
-
-      const [profileData, settingsData] = await Promise.all([
-        getProfile(user.id),
-        getUserSettings(user.id),
-      ])
-
-      if (cancelled) return
-
-      if (profileData) {
-        setProfile(profileData)
-        setAvatarUrl(profileData.avatar_url)
-        resetProfile({
-          full_name:      profileData.full_name       ?? "",
-          username:       profileData.username        ?? "",
-          phone:          profileData.phone           ?? "",
-          monthly_income: profileData.monthly_income  ?? undefined,
-          currency:       profileData.currency        ?? "PHP",
-          timezone:       profileData.timezone        ?? "Asia/Manila",
-        })
-      }
-
-      if (settingsData) {
-        setAiOptIn(settingsData.ai_opt_in    ?? profileData?.ai_opt_in ?? true)
-        setTheme(settingsData.theme          ?? "light")
-        setLanguage(settingsData.language    ?? "en")
-        setDateFormat(settingsData.date_format ?? "MM/DD/YYYY")
-        setNotifications(extractNotificationPrefs(settingsData))
-      } else {
-        setAiOptIn(profileData?.ai_opt_in ?? true)
-        setNotifications(DEFAULT_NOTIFS)
-      }
-
-      setProfileLoading(false)
-    }
-
-    loadData()
-    return () => { cancelled = true }
-  }, [user, resetProfile])
+  // ── Sync local pref state when store loads ────────────────
+  useEffect(() => { setLocalTheme(storeTheme)           }, [storeTheme])
+  useEffect(() => { setLocalLanguage(storeLanguage)     }, [storeLanguage])
+  useEffect(() => { setLocalDateFormat(storeDateFormat) }, [storeDateFormat])
+  useEffect(() => { setLocalNotifs(storeNotifs)         }, [storeNotifs])
+  useEffect(() => { setLocalAiOptIn(storeAiOptIn)       }, [storeAiOptIn])
 
   const onSaveProfile = async (data: ProfileForm) => {
     if (!user) return
@@ -130,9 +111,7 @@ export default function Settings() {
     } else if (error) {
       toast({ type: "error", title: "Update failed", description: error })
     } else {
-      toast({ type: "success", title: "Profile updated", description: "Your changes have been saved." })
-      const fresh = await getProfile(user.id)
-      if (fresh) setProfile(fresh)
+      toast({ type: "success", title: "Profile updated" })
     }
   }
 
@@ -141,8 +120,8 @@ export default function Settings() {
     if (error) {
       toast({ type: "error", title: "Email update failed", description: error })
     } else {
-      toast({ type: "info", title: "Confirm your new email", description: "Check both inboxes to confirm the change." })
-    emailForm.reset()
+      toast({ type: "info", title: "Confirm your new email", description: "Check both inboxes to confirm." })
+      emailForm.reset()
     }
   }
 
@@ -155,7 +134,8 @@ export default function Settings() {
     if (error) {
       toast({ type: "error", title: "Upload failed", description: error })
     } else {
-      setAvatarUrl(url)
+      setLocalAvatarUrl(url)
+      refreshProfile(user.id)
       toast({ type: "success", title: "Avatar updated!" })
     }
   }
@@ -178,30 +158,26 @@ export default function Settings() {
     if (error) {
       toast({ type: "error", title: "Failed", description: error })
     } else {
-      toast({ type: "success", title: "Verification email sent", description: "Check your inbox." })
+      toast({ type: "success", title: "Verification email sent" })
     }
   }
 
   const handleAiToggle = async (value: boolean) => {
     if (!user) return
-    setAiOptIn(value)
+    setLocalAiOptIn(value)
     const error = await updateAiOptIn(user.id, value)
     if (error) {
-      setAiOptIn(!value)
+      setLocalAiOptIn(!value)
       toast({ type: "error", title: "Failed to update", description: error })
     } else {
-      toast({
-        type: "info",
-        title: value ? "AI insights enabled" : "AI insights disabled",
-        description: value ? "Expenses will be classified locally." : "AI classification turned off.",
-      })
+      toast({ type: "info", title: value ? "AI insights enabled" : "AI insights disabled" })
     }
   }
 
   const handleSaveNotifications = async () => {
     if (!user) return
     setSavingNotifs(true)
-    const error = await saveNotificationPrefs(user.id, notifications)
+    const error = await updateNotifs(user.id, localNotifs)
     setSavingNotifs(false)
     if (error) {
       toast({ type: "error", title: "Failed to save", description: error })
@@ -213,8 +189,10 @@ export default function Settings() {
   const handleSaveAppPrefs = async () => {
     if (!user) return
     setSavingPrefs(true)
-    const error = await updateAppPreferences(user.id, {
-      theme, language, date_format: dateFormat,
+    const error = await updatePrefs(user.id, {
+      theme:       localTheme,
+      language:    localLanguage,
+      date_format: localDateFormat,
     })
     setSavingPrefs(false)
     if (error) {
@@ -224,16 +202,8 @@ export default function Settings() {
     }
   }
 
-  const handleDeactivate = () => {
-    toast({ type: "warning", title: "Contact support", description: "Email support@salapiq.com to deactivate." })
-  }
-
-  const handleDeleteAccount = () => {
-    toast({ type: "info", title: "Contact support", description: "Email support@salapiq.com for account deletion." })
-    setShowDeleteConfirm(false)
-  }
-
   const isVerified = user?.email_confirmed_at != null
+  const displayUrl = localAvatarUrl ?? getAvatarUrl()
   const initials   = (profile?.full_name || user?.email || "SA").slice(0, 2).toUpperCase()
 
   return (
@@ -245,16 +215,13 @@ export default function Settings() {
 
       <div className="flex gap-6">
 
-        {/* ── Sidebar ── */}
         <div className="w-52 shrink-0">
           <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
-
-            {/* Avatar section */}
             <div className="px-5 pt-6 pb-5 border-b border-stone-50 flex flex-col items-center">
               <div className="relative mb-3">
                 <div className="w-16 h-16 rounded-2xl overflow-hidden bg-emerald-100 flex items-center justify-center">
-                  {avatarUrl
-                    ? <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                  {displayUrl
+                    ? <img src={displayUrl} alt="avatar" className="w-full h-full object-cover" />
                     : <span className="mono text-xl font-medium text-emerald-700">{initials}</span>
                   }
                 </div>
@@ -268,24 +235,21 @@ export default function Settings() {
                   </div>
                 )}
               </div>
-              {profileLoading
-                ? <div className="h-3 w-24 bg-stone-100 rounded animate-pulse mt-1" />
-                : <p className="text-[12px] font-medium text-stone-800 text-center leading-tight">
-                    {profile?.full_name || user?.email?.split("@")[0]}
-                  </p>
-              }
+              {profileLoading ? (
+                <div className="h-3 w-24 bg-stone-100 rounded animate-pulse mt-1" />
+              ) : (
+                <p className="text-[12px] font-medium text-stone-800 text-center leading-tight">
+                  {profile?.full_name || user?.email?.split("@")[0]}
+                </p>
+              )}
               <div className="flex items-center gap-1 mt-1.5">
                 {isVerified
                   ? <><CheckCircle2 size={10} className="text-emerald-500" /><span className="mono text-[9px] text-emerald-600">Verified</span></>
                   : <><Clock size={10} className="text-amber-500" /><span className="mono text-[9px] text-amber-600">Unverified</span></>
                 }
               </div>
-              <p className="mono text-[9px] text-stone-400 mt-1 text-center truncate w-full px-2">
-                {user?.email}
-              </p>
+              <p className="mono text-[9px] text-stone-400 mt-1 text-center truncate w-full px-2">{user?.email}</p>
             </div>
-
-            {/* Tab nav */}
             <div className="p-2">
               {SETTINGS_TABS.map(({ id, icon: Icon, label }) => (
                 <button
@@ -309,96 +273,75 @@ export default function Settings() {
         <div className="flex-1 min-w-0">
 
           {activeTab === "profile" && (
-            <div className="tab-content flex flex-col gap-5">
-
+            <div className="flex flex-col gap-5">
               {!isVerified && (
-                <VerificationBanner onResend={handleResendVerification} />
+                <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4">
+                  <AlertCircle size={16} className="text-amber-500 shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-[13px] font-medium text-amber-800">Email not verified</p>
+                    <p className="mono text-[11px] text-amber-600 mt-0.5">Verify your email to unlock all features.</p>
+                  </div>
+                  <Button onClick={handleResendVerification} className="shrink-0 h-8 px-3 text-[11px] bg-amber-500 hover:bg-amber-600 text-white">
+                    Send verification
+                  </Button>
+                </div>
               )}
-
               <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6">
                 <h2 className="text-[14px] font-semibold text-stone-900 mb-5">Personal information</h2>
-
-                {profileLoading ? (
-                  <ProfileFormSkeleton />
+                {!profileInitialized || profileLoading ? (
+                  <div className="flex flex-col gap-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5"><div className="h-3 w-16 bg-stone-100 rounded animate-pulse" /><FieldSkeleton /></div>
+                      <div className="flex flex-col gap-1.5"><div className="h-3 w-16 bg-stone-100 rounded animate-pulse" /><FieldSkeleton /></div>
+                    </div>
+                    <div className="flex flex-col gap-1.5"><div className="h-3 w-20 bg-stone-100 rounded animate-pulse" /><FieldSkeleton /></div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5"><div className="h-3 w-20 bg-stone-100 rounded animate-pulse" /><FieldSkeleton /></div>
+                      <div className="flex flex-col gap-1.5"><div className="h-3 w-20 bg-stone-100 rounded animate-pulse" /><FieldSkeleton /></div>
+                    </div>
+                  </div>
                 ) : (
                   <form onSubmit={profileForm.handleSubmit(onSaveProfile)} className="flex flex-col gap-4">
-
                     <div className="grid grid-cols-2 gap-4">
                       <div className="flex flex-col gap-1.5">
                         <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Full name</Label>
-                        <Input
-                          placeholder="Juan dela Cruz"
-                          className={cn("h-10 text-sm bg-stone-50 border-stone-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20", profileForm.formState.errors.full_name && "border-red-300")}
-                          {...profileForm.register("full_name")}
-                        />
-                        {profileForm.formState.errors.full_name && (
-                          <p className="mono text-[10px] text-red-400">— {profileForm.formState.errors.full_name.message}</p>
-                        )}
+                        <Input placeholder="Juan dela Cruz" className={cn("h-10 text-sm bg-stone-50 border-stone-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20", profileForm.formState.errors.full_name && "border-red-300")} {...profileForm.register("full_name")} />
+                        {profileForm.formState.errors.full_name && <p className="mono text-[10px] text-red-400">— {profileForm.formState.errors.full_name.message}</p>}
                       </div>
                       <div className="flex flex-col gap-1.5">
                         <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Username</Label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 mono text-[12px] text-stone-400">@</span>
-                          <Input
-                            placeholder="juan_123"
-                            className={cn("h-10 text-sm bg-stone-50 border-stone-200 pl-7 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20", profileForm.formState.errors.username && "border-red-300")}
-                            {...profileForm.register("username")}
-                          />
+                          <Input placeholder="juan_123" className={cn("h-10 text-sm bg-stone-50 border-stone-200 pl-7 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20", profileForm.formState.errors.username && "border-red-300")} {...profileForm.register("username")} />
                         </div>
-                        {profileForm.formState.errors.username && (
-                          <p className="mono text-[10px] text-red-400">— {profileForm.formState.errors.username.message}</p>
-                        )}
+                        {profileForm.formState.errors.username && <p className="mono text-[10px] text-red-400">— {profileForm.formState.errors.username.message}</p>}
                       </div>
                     </div>
-
                     <div className="flex flex-col gap-1.5">
-                      <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">
-                        <Phone size={10} className="inline mr-1" />Phone number
-                      </Label>
-                      <Input
-                        placeholder="+63 9XX XXX XXXX"
-                        className="h-10 text-sm bg-stone-50 border-stone-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20"
-                        {...profileForm.register("phone")}
-                      />
+                      <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400"><Phone size={10} className="inline mr-1" />Phone number</Label>
+                      <Input placeholder="+63 9XX XXX XXXX" className="h-10 text-sm bg-stone-50 border-stone-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20" {...profileForm.register("phone")} />
                     </div>
-
                     <div className="grid grid-cols-2 gap-4">
                       <div className="flex flex-col gap-1.5">
-                        <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">
-                          <DollarSign size={10} className="inline mr-1" />Monthly income
-                        </Label>
+                        <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400"><DollarSign size={10} className="inline mr-1" />Monthly income</Label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 mono text-[12px] text-stone-400">₱</span>
-                          <Input
-                            type="number"
-                            placeholder="0"
-                            className="h-10 text-sm bg-stone-50 border-stone-200 pl-7 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20"
-                            {...profileForm.register("monthly_income", { valueAsNumber: true })}
-                          />
+                          <Input type="number" placeholder="0" className="h-10 text-sm bg-stone-50 border-stone-200 pl-7 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20" {...profileForm.register("monthly_income", { valueAsNumber: true })} />
                         </div>
                       </div>
-                      <SettingsSelect
-                        label="Currency"
-                        icon={DollarSign}
-                        options={CURRENCIES}
-                        {...profileForm.register("currency")}
-                      />
+                      <SettingsSelect label="Currency" icon={DollarSign} {...profileForm.register("currency")}>
+                        {CURRENCIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+                      </SettingsSelect>
                     </div>
-
-                    <SettingsSelect
-                      label="Timezone"
-                      icon={Globe}
-                      options={TIMEZONES}
-                      {...profileForm.register("timezone")}
-                    />
-
+                    <SettingsSelect label="Timezone" icon={Globe} {...profileForm.register("timezone")}>
+                      {TIMEZONES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                    </SettingsSelect>
                     <div className="flex justify-end pt-2">
-                      <Button
-                        type="submit"
-                        disabled={profileForm.formState.isSubmitting}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] tracking-wide h-9 px-5"
-                      >
-                        {profileForm.formState.isSubmitting ? <SpinnerBtn label="Saving" /> : "Save changes"}
+                      <Button type="submit" disabled={profileForm.formState.isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-5">
+                        {profileForm.formState.isSubmitting
+                          ? <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />Saving</span>
+                          : "Save changes"
+                        }
                       </Button>
                     </div>
                   </form>
@@ -408,14 +351,12 @@ export default function Settings() {
           )}
 
           {activeTab === "security" && (
-            <div className="tab-content flex flex-col gap-5">
-
+            <div className="flex flex-col gap-5">
               <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6">
                 <div className="mb-5">
                   <h2 className="text-[14px] font-semibold text-stone-900">Email address</h2>
                   <p className="mono text-[11px] text-stone-400 mt-1 flex items-center gap-1.5 flex-wrap">
-                    <Mail size={10} />
-                    <span>{user?.email}</span>
+                    <Mail size={10} /><span>{user?.email}</span>
                     {isVerified
                       ? <span className="text-emerald-600 flex items-center gap-0.5"><CheckCircle2 size={10} /> verified</span>
                       : <span className="text-amber-500 flex items-center gap-0.5"><Clock size={10} /> unverified</span>
@@ -425,15 +366,8 @@ export default function Settings() {
                 <form onSubmit={emailForm.handleSubmit(onUpdateEmail)} className="flex flex-col gap-3">
                   <div className="flex flex-col gap-1.5">
                     <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">New email address</Label>
-                    <Input
-                      type="email"
-                      placeholder="new@example.com"
-                      className={cn("h-10 text-sm bg-stone-50 border-stone-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20", emailForm.formState.errors.email && "border-red-300")}
-                      {...emailForm.register("email")}
-                    />
-                    {emailForm.formState.errors.email && (
-                      <p className="mono text-[10px] text-red-400">— {emailForm.formState.errors.email.message}</p>
-                    )}
+                    <Input type="email" placeholder="new@example.com" className={cn("h-10 text-sm bg-stone-50 border-stone-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20", emailForm.formState.errors.email && "border-red-300")} {...emailForm.register("email")} />
+                    {emailForm.formState.errors.email && <p className="mono text-[10px] text-red-400">— {emailForm.formState.errors.email.message}</p>}
                   </div>
                   <div className="flex justify-end">
                     <Button type="submit" disabled={emailForm.formState.isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-5">
@@ -445,16 +379,12 @@ export default function Settings() {
 
               <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6">
                 <h2 className="text-[14px] font-semibold text-stone-900 mb-1">Password</h2>
-                <p className="mono text-[11px] text-stone-400 mb-5">
-                  We'll send a reset link to <span className="text-stone-600">{user?.email}</span>
-                </p>
-                <Button
-                  onClick={handlePasswordReset}
-                  disabled={sendingReset}
-                  variant="outline"
-                  className="text-[12px] h-9 border-stone-200 text-stone-600 hover:border-emerald-400 hover:text-emerald-600"
-                >
-                  {sendingReset ? <SpinnerBtn label="Sending" lightSpinner={false} /> : "Send password reset email"}
+                <p className="mono text-[11px] text-stone-400 mb-5">We'll send a reset link to <span className="text-stone-600">{user?.email}</span></p>
+                <Button onClick={handlePasswordReset} disabled={sendingReset} variant="outline" className="text-[12px] h-9 border-stone-200 text-stone-600 hover:border-emerald-400 hover:text-emerald-600">
+                  {sendingReset
+                    ? <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full border-2 border-stone-300 border-t-stone-600 animate-spin" />Sending</span>
+                    : "Send password reset email"
+                  }
                 </Button>
               </div>
 
@@ -478,8 +408,7 @@ export default function Settings() {
           )}
 
           {activeTab === "preferences" && (
-            <div className="tab-content flex flex-col gap-5">
-
+            <div className="flex flex-col gap-5">
               <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6">
                 <h2 className="text-[14px] font-semibold text-stone-900 mb-5">Notifications</h2>
                 <div className="flex flex-col">
@@ -489,18 +418,19 @@ export default function Settings() {
                         <p className="text-[13px] text-stone-800">{label}</p>
                         <p className="mono text-[10px] text-stone-400 mt-0.5">{desc}</p>
                       </div>
-                      <input
-                        type="checkbox"
-                        className="toggle"
-                        checked={notifications[key]}
-                        onChange={(e) => setNotifications((prev) => ({ ...prev, [key]: e.target.checked }))}
+                      <Switch
+                        checked={localNotifs[key]}
+                        onChange={(val) => setLocalNotifs((prev) => ({ ...prev, [key]: val }))}
                       />
                     </div>
                   ))}
                 </div>
                 <div className="flex justify-end mt-4">
                   <Button onClick={handleSaveNotifications} disabled={savingNotifs} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-5">
-                    {savingNotifs ? <SpinnerBtn label="Saving" /> : "Save notifications"}
+                    {savingNotifs
+                      ? <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />Saving</span>
+                      : "Save notifications"
+                    }
                   </Button>
                 </div>
               </div>
@@ -509,32 +439,23 @@ export default function Settings() {
                 <h2 className="text-[14px] font-semibold text-stone-900 mb-5">App preferences</h2>
                 <div className="flex flex-col gap-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <SettingsSelect
-                      label="Theme"
-                      icon={Palette}
-                      options={THEMES}
-                      value={theme}
-                      onChange={(e) => setTheme(e.target.value)}
-                    />
-                    <SettingsSelect
-                      label="Language"
-                      icon={LanguagesIcon}
-                      options={LANGUAGES}
-                      value={language}
-                      onChange={(e) => setLanguage(e.target.value)}
-                    />
+                    <SettingsSelect label="Theme" icon={Palette} value={localTheme} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setLocalTheme(e.target.value)}>
+                      {THEMES.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
+                    </SettingsSelect>
+                    <SettingsSelect label="Language" icon={LanguagesIcon} value={localLanguage} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setLocalLanguage(e.target.value)}>
+                      {LANGUAGES.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
+                    </SettingsSelect>
                   </div>
-                  <SettingsSelect
-                    label="Date format"
-                    icon={CalendarDays}
-                    options={DATE_FORMATS}
-                    value={dateFormat}
-                    onChange={(e) => setDateFormat(e.target.value)}
-                  />
+                  <SettingsSelect label="Date format" icon={CalendarDays} value={localDateFormat} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setLocalDateFormat(e.target.value)}>
+                    {DATE_FORMATS.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
+                  </SettingsSelect>
                 </div>
                 <div className="flex justify-end mt-4">
                   <Button onClick={handleSaveAppPrefs} disabled={savingPrefs} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-5">
-                    {savingPrefs ? <SpinnerBtn label="Saving" /> : "Save preferences"}
+                    {savingPrefs
+                      ? <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />Saving</span>
+                      : "Save preferences"
+                    }
                   </Button>
                 </div>
               </div>
@@ -542,8 +463,7 @@ export default function Settings() {
           )}
 
           {activeTab === "ai" && (
-            <div className="tab-content flex flex-col gap-5">
-
+            <div className="flex flex-col gap-5">
               <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6">
                 <div className="flex items-center gap-2 mb-1">
                   <h2 className="text-[14px] font-semibold text-stone-900">AI expense classification</h2>
@@ -557,7 +477,7 @@ export default function Settings() {
                     <p className="text-[13px] text-stone-800">Enable AI classification</p>
                     <p className="mono text-[10px] text-stone-400 mt-0.5">Auto-suggest categories when you add expenses</p>
                   </div>
-                  <input type="checkbox" className="toggle" checked={aiOptIn} onChange={(e) => handleAiToggle(e.target.checked)} />
+                  <Switch checked={localAiOptIn} onChange={handleAiToggle} />
                 </div>
               </div>
 
@@ -576,9 +496,7 @@ export default function Settings() {
 
               <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6">
                 <h2 className="text-[14px] font-semibold text-stone-900 mb-1">Clear AI training data</h2>
-                <p className="mono text-[11px] text-stone-400 mb-4">
-                  Removes all your local AI corrections from this browser. The base model remains.
-                </p>
+                <p className="mono text-[11px] text-stone-400 mb-4">Removes all your local AI corrections from this browser. The base model remains.</p>
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -594,19 +512,21 @@ export default function Settings() {
           )}
 
           {activeTab === "danger" && (
-            <div className="tab-content flex flex-col gap-5">
+            <div className="flex flex-col gap-5">
               <div className="bg-white rounded-2xl border border-red-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6">
                 <h2 className="text-[14px] font-semibold text-red-600 mb-1">Danger zone</h2>
-                <p className="mono text-[11px] text-stone-400 mb-5">
-                  These actions are irreversible. Please proceed with caution.
-                </p>
+                <p className="mono text-[11px] text-stone-400 mb-5">These actions are irreversible. Please proceed with caution.</p>
 
                 <div className="flex items-center justify-between py-4 border-b border-stone-50">
                   <div>
                     <p className="text-[13px] font-medium text-stone-800">Deactivate account</p>
                     <p className="mono text-[10px] text-stone-400 mt-0.5">Temporarily disable your account. You can reactivate anytime.</p>
                   </div>
-                  <Button variant="outline" onClick={handleDeactivate} className="text-[12px] h-9 border-stone-200 text-stone-600 hover:border-amber-400 hover:text-amber-600 shrink-0">
+                  <Button
+                    variant="outline"
+                    onClick={() => toast({ type: "warning", title: "Contact support", description: "Email support@salapiq.com to deactivate." })}
+                    className="text-[12px] h-9 border-stone-200 text-stone-600 hover:border-amber-400 hover:text-amber-600 shrink-0"
+                  >
                     Deactivate
                   </Button>
                 </div>
@@ -624,9 +544,7 @@ export default function Settings() {
                 {showDeleteConfirm && (
                   <div className="mt-2 rounded-xl bg-red-50 border border-red-200 p-4">
                     <p className="text-[13px] font-medium text-red-700 mb-1">Are you absolutely sure?</p>
-                    <p className="mono text-[10px] text-red-500 mb-3">
-                      Type <span className="font-medium">DELETE</span> to confirm. This will permanently erase all your data.
-                    </p>
+                    <p className="mono text-[10px] text-red-500 mb-3">Type <span className="font-medium">DELETE</span> to confirm. This will permanently erase all your data.</p>
                     <Input
                       placeholder="Type DELETE to confirm"
                       value={deleteInput}
@@ -634,10 +552,21 @@ export default function Settings() {
                       className="h-9 text-sm bg-white border-red-200 focus-visible:border-red-400 focus-visible:ring-red-400/20 mb-3"
                     />
                     <div className="flex gap-2">
-                      <Button onClick={handleDeleteAccount} disabled={deleteInput !== "DELETE"} className="text-[12px] h-9 bg-red-500 hover:bg-red-600 text-white disabled:opacity-40">
+                      <Button
+                        onClick={() => {
+                          toast({ type: "info", title: "Contact support", description: "Email support@salapiq.com for account deletion." })
+                          setShowDeleteConfirm(false)
+                        }}
+                        disabled={deleteInput !== "DELETE"}
+                        className="text-[12px] h-9 bg-red-500 hover:bg-red-600 text-white disabled:opacity-40"
+                      >
                         Permanently delete
                       </Button>
-                      <Button variant="outline" onClick={() => { setShowDeleteConfirm(false); setDeleteInput("") }} className="text-[12px] h-9 border-stone-200 text-stone-600">
+                      <Button
+                        variant="outline"
+                        onClick={() => { setShowDeleteConfirm(false); setDeleteInput("") }}
+                        className="text-[12px] h-9 border-stone-200 text-stone-600"
+                      >
                         Cancel
                       </Button>
                     </div>

@@ -1,12 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/hooks/useAuth"
 import { supabase } from "@/lib/supabaseClient"
-import {
-  getNotifications, markAsRead, markAllAsRead,
-  deleteNotification, clearAllNotifications,
-  type Notification,
-} from "@/services/NotificationService"
+import { useNotificationStore } from "@/stores/useNotificationStore"
+import type { Notification } from "@/services/NotificationService"
 import {
   Bell, X, Check, CheckCheck, Trash2,
   TrendingDown, Users, Wallet, Info,
@@ -28,7 +25,7 @@ const TYPE_COLORS = {
 }
 
 function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
+  const diff  = Date.now() - new Date(dateStr).getTime()
   const mins  = Math.floor(diff / 60000)
   const hours = Math.floor(diff / 3600000)
   const days  = Math.floor(diff / 86400000)
@@ -41,59 +38,48 @@ function timeAgo(dateStr: string): string {
 }
 
 export default function NotificationBell() {
-  const { user }   = useAuth()
-  const navigate   = useNavigate()
-  const dropRef    = useRef<HTMLDivElement>(null)
+  const { user }  = useAuth()
+  const navigate  = useNavigate()
+  const dropRef   = useRef<HTMLDivElement>(null)
 
-  const [open,          setOpen]          = useState(false)
-    const [notifications, setNotifications] = useState<Notification[]>([])
-    const [loading,       setLoading]       = useState(false)
+  const notifications  = useNotificationStore((s) => s.notifications)
+  const loading        = useNotificationStore((s) => s.loading)
+  const unreadCount    = useNotificationStore((s) => s.unreadCount)
+  const fetch          = useNotificationStore((s) => s.fetch)
+  // const refresh        = useNotificationStore((s) => s.refresh)
+  const markRead       = useNotificationStore((s) => s.markRead)
+  const markAllRead    = useNotificationStore((s) => s.markAllRead)
+  const remove         = useNotificationStore((s) => s.remove)
+  const clearAll       = useNotificationStore((s) => s.clearAll)
+  const prepend        = useNotificationStore((s) => s.prepend)
 
-    const unread = notifications.filter((n) => !n.read).length
+  const [open, setOpen] = useState(false)
 
-    const load = useCallback(async () => {
-    if (!user) return
-    const data = await getNotifications(user.id)
-    setNotifications(data)
-    }, [user])
-
-    useEffect(() => {
-    if (!user) return
-    let cancelled = false
-
-    const run = async () => {
-        setLoading(true)
-        const data = await getNotifications(user.id)
-        if (cancelled) return
-        setNotifications(data)
-        setLoading(false)
-    }
-
-    run()
-    return () => { cancelled = true }
-    }, [user])
+  useEffect(() => {
+    if (user) fetch(user.id)
+  }, [user, fetch])
 
   useEffect(() => {
     if (!user) return
 
     const channel = supabase
-    .channel(`notifications:${user.id}`)
-    .on(
+      .channel(`notifications:${user.id}`)
+      .on(
         "postgres_changes",
         {
-        event:  "INSERT",
-        schema: "public",
-        table:  "notifications",
-        filter: `user_id=eq.${user.id}`,
+          event:  "INSERT",
+          schema: "public",
+          table:  "notifications",
+          filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-        setNotifications((prev) => [payload.new as Notification, ...prev])
+          prepend(payload.new as Notification)
         }
-    )
-    .subscribe()
+      )
+      .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [user, load])
+  }, [user, prepend])
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -105,46 +91,19 @@ export default function NotificationBell() {
     return () => document.removeEventListener("mousedown", handler)
   }, [open])
 
-  const handleOpen = () => setOpen((prev) => !prev)
-
-  const handleMarkRead = async (n: Notification) => {
-    if (n.read) return
-    await markAsRead(n.id)
-    setNotifications((prev) =>
-      prev.map((x) => x.id === n.id ? { ...x, read: true } : x)
-    )
-  }
-
-  const handleMarkAllRead = async () => {
-    if (!user) return
-    await markAllAsRead(user.id)
-    setNotifications((prev) => prev.map((x) => ({ ...x, read: true })))
-  }
-
-  const handleDelete = async (e: React.MouseEvent, id: string) => {
-    e.stopPropagation()
-    await deleteNotification(id)
-    setNotifications((prev) => prev.filter((x) => x.id !== id))
-  }
-
-  const handleClearAll = async () => {
-    if (!user) return
-    await clearAllNotifications(user.id)
-    setNotifications([])
-  }
-
   const handleClick = async (n: Notification) => {
-    await handleMarkRead(n)
+    if (!n.read) await markRead(n.id)
     setOpen(false)
     if (n.link) navigate(n.link)
   }
 
+  const unread = unreadCount()
+
   return (
     <div ref={dropRef} className="relative">
 
-      {/* Bell button */}
       <button
-        onClick={handleOpen}
+        onClick={() => setOpen((p) => !p)}
         className={cn(
           "relative w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
           open
@@ -170,7 +129,7 @@ export default function NotificationBell() {
           <style>{`
             @keyframes dropIn {
               from { opacity: 0; transform: translateY(-6px) scale(0.98); }
-              to   { opacity: 1; transform: translateY(0)    scale(1);    }
+              to   { opacity: 1; transform: translateY(0) scale(1); }
             }
           `}</style>
 
@@ -186,18 +145,16 @@ export default function NotificationBell() {
             <div className="flex items-center gap-1">
               {unread > 0 && (
                 <button
-                  onClick={handleMarkAllRead}
+                  onClick={() => user && markAllRead(user.id)}
                   className="flex items-center gap-1 mono text-[10px] text-stone-400 hover:text-emerald-600 px-2 py-1 rounded-lg hover:bg-emerald-50 transition-colors"
-                  title="Mark all as read"
                 >
                   <CheckCheck size={11} /> All read
                 </button>
               )}
               {notifications.length > 0 && (
                 <button
-                  onClick={handleClearAll}
+                  onClick={() => user && clearAll(user.id)}
                   className="flex items-center gap-1 mono text-[10px] text-stone-400 hover:text-red-500 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
-                  title="Clear all"
                 >
                   <Trash2 size={11} /> Clear
                 </button>
@@ -240,23 +197,24 @@ export default function NotificationBell() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <p className={cn("text-[12px] leading-tight", n.read ? "text-stone-600 font-normal" : "text-stone-900 font-medium")}>
+                        <p className={cn(
+                          "text-[12px] leading-tight",
+                          n.read ? "text-stone-600 font-normal" : "text-stone-900 font-medium"
+                        )}>
                           {n.title}
                         </p>
                         <div className="flex items-center gap-1 shrink-0">
                           {!n.read && (
                             <button
-                              onClick={async (e) => { e.stopPropagation(); await handleMarkRead(n) }}
+                              onClick={async (e) => { e.stopPropagation(); await markRead(n.id) }}
                               className="w-5 h-5 rounded flex items-center justify-center text-stone-300 hover:text-emerald-500 opacity-0 group-hover:opacity-100 transition-all"
-                              title="Mark as read"
                             >
                               <Check size={10} />
                             </button>
                           )}
                           <button
-                            onClick={(e) => handleDelete(e, n.id)}
+                            onClick={(e) => { e.stopPropagation(); remove(n.id) }}
                             className="w-5 h-5 rounded flex items-center justify-center text-stone-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
-                            title="Delete"
                           >
                             <X size={10} />
                           </button>

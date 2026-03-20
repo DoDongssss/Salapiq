@@ -28,7 +28,9 @@ export async function getFamilyWithMembers(
       *,
       members:family_members(
         id, user_id, role, joined_at,
-        profile:profiles(full_name, username, avatar_url, email)
+        profile:profiles!family_members_user_id_fkey(
+          full_name, username, avatar_url, email
+        )
       )
     `)
     .eq("id", familyId)

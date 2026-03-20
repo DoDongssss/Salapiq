@@ -1,17 +1,20 @@
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Routes, Route, NavLink, useNavigate } from "react-router-dom"
 import { useAuth } from "@/hooks/useAuth"
 import { useToast } from "@/hooks/useToast"
+import { useFamilyStore } from "@/stores/useFamilyStore"
+import { useAccountStore } from "@/stores/useAccountStore"
 import {
-  getMyFamily, getFamilyWithMembers, leaveFamily,
-  removeMember, updateMemberRole, regenerateInviteCode,
-  getFamilyAccounts, getFamilyTransactions,
+  leaveFamily, removeMember, updateMemberRole,
+  regenerateInviteCode, getFamilyAccounts,
+  getFamilyTransactions,
   linkAccountToFamily, unlinkAccountFromFamily,
   type FamilyWithMembers, type FamilyMember,
   type FamilyTransactionFilters,
+  type PaginatedFamilyTransactions,
 } from "@/services/FamilyService"
-import type { TransactionWithAccount } from "@/services/AccountService"
 import { getAccounts } from "@/services/AccountService"
+import type { TransactionWithAccount } from "@/services/AccountService"
 import Avatar from "@/components/customs/Avatar"
 import Pagination from "@/components/customs/Pagination"
 import CreateFamilyModal from "@/components/modals/CreateFamilyModal"
@@ -28,9 +31,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import type { Account } from "@/types/AccountTypes"
-import { useAccountStore } from "@/stores/useAccountStore"
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 5
 
 const ACCOUNT_ICONS: Record<string, LucideIcon> = {
   bank:    Building2,
@@ -55,47 +57,24 @@ const TYPE_OPTIONS: { value: TypeFilter; label: string }[] = [
   { value: "transfer", label: "Transfers" },
 ]
 
-// ─── Shell ────────────────────────────────────────────────────────────────────
-
 export default function Family() {
   const { user } = useAuth()
 
-  const [family,     setFamily]     = useState<FamilyWithMembers | null>(null)
-  const [loading,    setLoading]    = useState(true)
+  const family      = useFamilyStore((s) => s.family)
+  const loading     = useFamilyStore((s) => s.loading)
+  const fetchFamily = useFamilyStore((s) => s.fetch)
+  const refresh     = useFamilyStore((s) => s.refresh)
+
   const [showCreate, setShowCreate] = useState(false)
   const [showJoin,   setShowJoin]   = useState(false)
 
-  const reload = useCallback(async () => {
-    if (!user) return
-    const base = await getMyFamily(user.id)
-    if (base) {
-      const full = await getFamilyWithMembers(base.id)
-      setFamily(full)
-    } else {
-      setFamily(null)
-    }
-  }, [user])
-
   useEffect(() => {
-    if (!user) return
-    let cancelled = false
+    if (user) fetchFamily(user.id)
+  }, [user, fetchFamily])
 
-    const run = async () => {
-      setLoading(true)
-      const base = await getMyFamily(user.id)
-      if (cancelled) return
-      if (base) {
-        const full = await getFamilyWithMembers(base.id)
-        if (!cancelled) setFamily(full)
-      } else {
-        if (!cancelled) setFamily(null)
-      }
-      if (!cancelled) setLoading(false)
-    }
-
-    run()
-    return () => { cancelled = true }
-  }, [user])
+  const reload = async () => {
+    if (user) await refresh(user.id)
+  }
 
   const myRole = family?.members.find((m) => m.user_id === user?.id)?.role
 
@@ -194,8 +173,6 @@ export default function Family() {
     </div>
   )
 }
-
-// ─── Overview ─────────────────────────────────────────────────────────────────
 
 function FamilyOverview({
   family, myRole, onReload,
@@ -296,8 +273,6 @@ function FamilyOverview({
     </div>
   )
 }
-
-// ─── Members ──────────────────────────────────────────────────────────────────
 
 function FamilyMembers({
   family, myRole, onReload,
@@ -410,8 +385,6 @@ function FamilyMembers({
   )
 }
 
-// ─── Accounts ─────────────────────────────────────────────────────────────────
-
 function FamilyAccounts({ family }: { family: FamilyWithMembers }) {
   const { user }  = useAuth()
   const { toast } = useToast()
@@ -495,10 +468,7 @@ function FamilyAccounts({ family }: { family: FamilyWithMembers }) {
                   <p className="text-[13px] font-medium text-stone-800">{a.name}</p>
                   <p className="mono text-[10px] text-stone-400">₱{a.balance.toLocaleString("en-PH", { minimumFractionDigits: 2 })}</p>
                 </div>
-                <button
-                  onClick={() => handleUnlink(a.id)}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-200 hover:text-red-400 hover:bg-red-50 transition-colors"
-                >
+                <button onClick={() => handleUnlink(a.id)} className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-200 hover:text-red-400 hover:bg-red-50 transition-colors">
                   <X size={12} />
                 </button>
               </div>
@@ -536,8 +506,6 @@ function FamilyAccounts({ family }: { family: FamilyWithMembers }) {
   )
 }
 
-// ─── Transactions ─────────────────────────────────────────────────────────────
-
 function FamilyTransactions({ family }: { family: FamilyWithMembers }) {
   const lastAdded = useAccountStore((s) => s.lastAdded)
 
@@ -553,7 +521,6 @@ function FamilyTransactions({ family }: { family: FamilyWithMembers }) {
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // ✅ debounce search 400ms
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
@@ -563,7 +530,6 @@ function FamilyTransactions({ family }: { family: FamilyWithMembers }) {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [search])
 
-  // ✅ main fetch — server-side pagination + search + filter
   useEffect(() => {
     let cancelled = false
 
@@ -575,7 +541,7 @@ function FamilyTransactions({ family }: { family: FamilyWithMembers }) {
         search:   debouncedSearch || undefined,
         type:     typeFilter === "all" ? undefined : typeFilter,
       }
-      const result = await getFamilyTransactions(family.id, filters)
+      const result: PaginatedFamilyTransactions = await getFamilyTransactions(family.id, filters)
       if (cancelled) return
       setTransactions(result.data)
       setTotal(result.total)
@@ -604,12 +570,8 @@ function FamilyTransactions({ family }: { family: FamilyWithMembers }) {
 
   return (
     <div className="flex flex-col gap-4">
-
-      {/* Filter bar */}
       <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-4">
         <div className="flex items-center gap-3 flex-wrap">
-
-          {/* Search */}
           <div className="relative flex-1 min-w-[200px]">
             <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
             <input
@@ -620,16 +582,12 @@ function FamilyTransactions({ family }: { family: FamilyWithMembers }) {
               className="w-full h-9 pl-8 pr-8 text-[12px] bg-stone-50 border border-stone-200 rounded-xl text-stone-800 placeholder:text-stone-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-colors mono"
             />
             {search && (
-              <button
-                onClick={() => setSearch("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-300 hover:text-stone-600 transition-colors"
-              >
+              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-300 hover:text-stone-600 transition-colors">
                 <X size={11} />
               </button>
             )}
           </div>
 
-          {/* Type filter */}
           <div className="relative">
             <select
               value={typeFilter}
@@ -647,26 +605,18 @@ function FamilyTransactions({ family }: { family: FamilyWithMembers }) {
             </span>
           </div>
 
-          {/* Total count */}
           {!loading && (
-            <p className="mono text-[11px] text-stone-400 ml-auto">
-              {total.toLocaleString()} total
-            </p>
+            <p className="mono text-[11px] text-stone-400 ml-auto">{total.toLocaleString()} total</p>
           )}
 
-          {/* Reset */}
           {hasActiveFilters && (
-            <button
-              onClick={handleReset}
-              className="flex items-center gap-1.5 h-9 px-3 mono text-[11px] text-stone-500 hover:text-red-500 hover:bg-red-50 border border-stone-200 hover:border-red-200 rounded-xl transition-colors"
-            >
+            <button onClick={handleReset} className="flex items-center gap-1.5 h-9 px-3 mono text-[11px] text-stone-500 hover:text-red-500 hover:bg-red-50 border border-stone-200 hover:border-red-200 rounded-xl transition-colors">
               <SlidersHorizontal size={11} /> Reset
             </button>
           )}
         </div>
       </div>
 
-      {/* List */}
       {loading ? (
         <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
           {Array.from({ length: PAGE_SIZE }).map((_, i) => (
@@ -700,12 +650,8 @@ function FamilyTransactions({ family }: { family: FamilyWithMembers }) {
               const isIncome   = t.type === "income"
               const isExpense  = t.type === "expense"
               const isTransfer = t.type === "transfer"
-              const Icon = isIncome ? TrendingUp : isExpense ? TrendingDown : ArrowLeftRight
-              const iconColor = isIncome
-                ? "text-emerald-600 bg-emerald-50"
-                : isExpense
-                ? "text-red-500 bg-red-50"
-                : "text-sky-600 bg-sky-50"
+              const Icon       = isIncome ? TrendingUp : isExpense ? TrendingDown : ArrowLeftRight
+              const iconColor  = isIncome ? "text-emerald-600 bg-emerald-50" : isExpense ? "text-red-500 bg-red-50" : "text-sky-600 bg-sky-50"
               return (
                 <div key={t.id} className="flex items-center gap-3 px-5 py-3.5 border-b border-stone-50 last:border-0 hover:bg-stone-50/50 transition-colors">
                   <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", iconColor)}>
@@ -732,10 +678,7 @@ function FamilyTransactions({ family }: { family: FamilyWithMembers }) {
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className={cn(
-                      "mono text-[13px] font-medium",
-                      isIncome ? "text-emerald-600" : isExpense ? "text-stone-800" : "text-sky-600"
-                    )}>
+                    <p className={cn("mono text-[13px] font-medium", isIncome ? "text-emerald-600" : isExpense ? "text-stone-800" : "text-sky-600")}>
                       {isIncome ? "+" : isExpense ? "−" : ""}
                       ₱{t.amount.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
                     </p>

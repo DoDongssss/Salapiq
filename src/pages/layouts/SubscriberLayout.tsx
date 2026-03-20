@@ -3,21 +3,30 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "@/hooks/useAuth"
 import { useSessionTimeout } from "@/hooks/useSessionTimeout"
 import { logout } from "@/services/AuthService"
-import { useAccountStore } from "@/stores/useAccountStore"
+import { useAccountStore }      from "@/stores/useAccountStore"
+import { useFamilyStore }       from "@/stores/useFamilyStore"
+import { useTransactionStore }  from "@/stores/useTransactionStore"
+import { useNotificationStore } from "@/stores/useNotificationStore"
+import { useProfileStore }      from "@/stores/useProfileStore"
+import { useSettingStore } from "@/stores/useSettingStore"
 import {
   LayoutDashboard, ListChecks, Target,
   PiggyBank, Sparkles, Plus, LogOut,
-  Settings, Wallet, Users,
+  Settings, Users,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import logo from "@/assets/logo.png"
-import AddExpenseModal from "@/components/modals/AddExpenseModal"
-import NotificationBell from "@/components/customs/NotificationBell" // ✅
+import AddExpenseModal  from "@/components/modals/AddExpenseModal"
+import NotificationBell from "@/components/customs/NotificationBell"
+
+const CURRENT_MONTH = new Date().getMonth() + 1
+const CURRENT_YEAR  = new Date().getFullYear()
 
 const NAV_ITEMS = [
   { icon: LayoutDashboard, label: "Dashboard",    path: "/app/dashboard"    },
-  { icon: Wallet,          label: "Accounts",     path: "/app/accounts"     },
-  { icon: ListChecks,      label: "Transactions", path: "/app/transactions" },
+  { icon: ListChecks,      label: "Ledger",       path: "/app/ledger" },
+  // { icon: Wallet,          label: "Accounts",     path: "/app/accounts"     },
+  // { icon: ListChecks,      label: "Transactions", path: "/app/transactions" },
   { icon: Target,          label: "Budget",       path: "/app/budget"       },
   { icon: PiggyBank,       label: "Savings",      path: "/app/savings"      },
   { icon: Users,           label: "Family",       path: "/app/family"       },
@@ -30,18 +39,41 @@ export default function SubscriberLayout() {
   const location  = useLocation()
   const { user, loading } = useAuth()
 
-  const fetchAccounts   = useAccountStore((s) => s.fetch)
-  const refreshAccounts = useAccountStore((s) => s.refresh)
-  const resetAccounts   = useAccountStore((s) => s.reset)
-  const notifyAdded     = useAccountStore((s) => s.notifyAdded)
+  const fetchAccounts      = useAccountStore((s) => s.fetch)
+  const refreshAccounts    = useAccountStore((s) => s.refresh)
+  const resetAccounts      = useAccountStore((s) => s.reset)
+  const notifyAdded        = useAccountStore((s) => s.notifyAdded)
+
+  const fetchFamily        = useFamilyStore((s) => s.fetch)
+  const resetFamily        = useFamilyStore((s) => s.reset)
+
+  const fetchSummary       = useTransactionStore((s) => s.fetchSummary)
+  const notifyTransaction  = useTransactionStore((s) => s.notifyAdded)
+  const resetTransactions  = useTransactionStore((s) => s.reset)
+
+  const fetchNotifications = useNotificationStore((s) => s.fetch)
+  const resetNotifications = useNotificationStore((s) => s.reset)
+
+  const fetchProfile       = useProfileStore((s) => s.fetch)
+  const profileInitials    = useProfileStore((s) => s.initials)
+  const resetProfile       = useProfileStore((s) => s.reset)
+
+  const fetchSettings      = useSettingStore((s) => s.fetch)
+  const resetSettings      = useSettingStore((s) => s.reset)
 
   const [showAddExpense, setShowAddExpense] = useState(false)
 
   useSessionTimeout()
 
   useEffect(() => {
-    if (user) fetchAccounts(user.id)
-  }, [user, fetchAccounts])
+    if (!user) return
+    fetchAccounts(user.id)
+    fetchFamily(user.id)
+    fetchSummary(user.id, CURRENT_MONTH, CURRENT_YEAR)
+    fetchNotifications(user.id)
+    fetchProfile(user.id)
+    fetchSettings(user.id)
+  }, [user, fetchAccounts, fetchFamily, fetchSummary, fetchNotifications, fetchProfile, fetchSettings])
 
   useEffect(() => {
     if (!loading && !user) {
@@ -53,16 +85,25 @@ export default function SubscriberLayout() {
 
   const handleLogout = async () => {
     resetAccounts()
+    resetFamily()
+    resetTransactions()
+    resetNotifications()
+    resetProfile()
+    resetSettings()
     await logout()
     navigate("/auth/login", { replace: true })
   }
 
   const handleTransactionAdded = () => {
-    if (user) refreshAccounts(user.id)
+    if (user) {
+      refreshAccounts(user.id)
+      fetchSummary(user.id, CURRENT_MONTH, CURRENT_YEAR)
+    }
     notifyAdded()
+    notifyTransaction()
   }
 
-  const initials = user?.email?.slice(0, 2).toUpperCase() ?? "SA"
+  const initials = profileInitials(user?.email?.slice(0, 2).toUpperCase() ?? "SA")
 
   return (
     <div className="min-h-screen bg-[#f7f5f0] font-['Bricolage_Grotesque',sans-serif]">
@@ -96,8 +137,7 @@ export default function SubscriberLayout() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-
-            <NotificationBell /> {/* ✅ replaces static bell button */}
+            <NotificationBell />
 
             <button
               onClick={() => setShowAddExpense(true)}
@@ -125,7 +165,6 @@ export default function SubscriberLayout() {
                 <LogOut size={13} />
               </button>
             </div>
-
           </div>
         </div>
       </nav>
