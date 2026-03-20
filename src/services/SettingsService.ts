@@ -41,28 +41,72 @@ export async function updateProfile(
   return error.message
 }
 
-export async function uploadAvatar(
-  userId: string,
-  file: File
-): Promise<{ url: string | null; error: string | null }> {
-  const ext  = file.name.split(".").pop()
-  const path = `${userId}/avatar.${ext}`
+// export async function uploadAvatar(
+//   userId: string,
+//   file: File
+// ): Promise<{ url: string | null; error: string | null }> {
+//   const ext  = file.name.split(".").pop()
+//   const path = `${userId}/avatar.${ext}`
 
-  const { error: uploadError } = await supabase.storage
-    .from("avatars")
-    .upload(path, file, { upsert: true })
+//   const { error: uploadError } = await supabase.storage
+//     .from("avatars")
+//     .upload(path, file, { upsert: true })
 
-  if (uploadError) return { url: null, error: uploadError.message }
+//   if (uploadError) return { url: null, error: uploadError.message }
 
-  const { data } = supabase.storage.from("avatars").getPublicUrl(path)
+//   const { data } = supabase.storage.from("avatars").getPublicUrl(path)
 
-  const { error: updateError } = await supabase
+//   const { error: updateError } = await supabase
+//     .from("profiles")
+//     .update({ avatar_url: data.publicUrl })
+//     .eq("id", userId)
+
+//   if (updateError) return { url: null, error: updateError.message }
+//   return { url: data.publicUrl, error: null }
+// }
+
+export async function uploadAvatar(userId: string, file: File) {
+  try {
+    const url = await handleUploadAvatar(file)
+
+    const { error } = await saveAvatarUrl(userId, url)
+
+    if (error) {
+      return { url: null, error: error.message }
+    }
+
+    return { url, error: null }
+  } catch (err: any) {
+    return { url: null, error: err.message }
+  }
+}
+
+export async function handleUploadAvatar(file: File) {
+  const formData = new FormData()
+
+  formData.append("file", file)
+  formData.append("upload_preset", "salapiq")
+
+  const res = await fetch(
+    "https://api.cloudinary.com/v1_1/dahoy0gkp/image/upload",
+    {
+      method: "POST",
+      body: formData,
+    }
+  )
+
+  const data = await res.json()
+
+  return data.secure_url as string
+}
+
+export async function saveAvatarUrl(userId: string, url: string) {
+  const { error } = await supabase
     .from("profiles")
-    .update({ avatar_url: data.publicUrl })
+    .update({ avatar_url: url })
     .eq("id", userId)
 
-  if (updateError) return { url: null, error: updateError.message }
-  return { url: data.publicUrl, error: null }
+  return { error }
 }
 
 export async function updateEmail(newEmail: string): Promise<string | null> {

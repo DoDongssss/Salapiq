@@ -117,18 +117,17 @@ export async function getTransactions(
       `*,
       account:accounts!transactions_account_id_fkey(name, color, icon, type),
       to_account:accounts!transactions_to_account_id_fkey(name, color, icon, type)`,
-      { count: "exact" }   // ✅ get total count from Supabase
+      { count: "exact" }  
     )
     .eq("user_id", userId)
     .order("date",       { ascending: false })
     .order("created_at", { ascending: false })
-    .range(from_idx, to_idx)  // ✅ server-side pagination
+    .range(from_idx, to_idx)  
  
   if (type)   query = query.eq("type", type)
   if (from)   query = query.gte("date", from)
   if (to)     query = query.lte("date", to)
  
-  // ✅ server-side search across note and category
   if (search?.trim()) {
     query = query.or(
       `note.ilike.%${search.trim()}%,category.ilike.%${search.trim()}%`
