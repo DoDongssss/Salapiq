@@ -85,6 +85,7 @@ export type TransactionFilters = {
   search?:   string
   page?:     number
   pageSize?: number
+  accountId?: string
 }
  
 export type PaginatedTransactions = {
@@ -104,6 +105,7 @@ export async function getTransactions(
     from,
     to,
     search,
+    accountId,
     page     = 1,
     pageSize = 10,
   } = filters
@@ -124,6 +126,7 @@ export async function getTransactions(
     .order("created_at", { ascending: false })
     .range(from_idx, to_idx)  
  
+  if (accountId) query = query.eq("account_id", accountId)
   if (type)   query = query.eq("type", type)
   if (from)   query = query.gte("date", from)
   if (to)     query = query.lte("date", to)

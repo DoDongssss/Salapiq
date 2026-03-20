@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from "react"
+import { useEffect, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAuth } from "@/hooks/useAuth"
 import { useToast } from "@/hooks/useToast"
+import { useAccountStore } from "@/stores/useAccountStore"
 import { transactionSchema, type TransactionForm, TRANSACTION_CATEGORIES } from "@/types/AccountTypes"
-import { getAccounts, createTransaction } from "@/services/AccountService"
-import type { Account } from "@/types/AccountTypes"
+import { createTransaction } from "@/services/AccountService"
 import SettingsSelect from "@/components/customs/SettingsSelect"
 import SpinnerBtn from "@/components/customs/SpinnerBtn"
 import {
@@ -17,22 +17,24 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 type Props = {
-  open:    boolean
-  onClose: () => void
+  open:     boolean
+  onClose:  () => void
   onAdded?: () => void
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+const TYPE_TABS = [
+  { value: "expense",  label: "Expense",  icon: TrendingDown  },
+  { value: "income",   label: "Income",   icon: TrendingUp    },
+  { value: "transfer", label: "Transfer", icon: ArrowLeftRight },
+] as const
 
 export default function AddExpenseModal({ open, onClose, onAdded }: Props) {
   const { user }  = useAuth()
   const { toast } = useToast()
 
-  const [accounts,  setAccounts]  = useState<Account[]>([])
-  const [loadingAcc, setLoadingAcc] = useState(false)
+  const accounts = useAccountStore((s) => s.accounts)
+
   const overlayRef = useRef<HTMLDivElement>(null)
 
   const form = useForm<TransactionForm>({
@@ -51,18 +53,12 @@ export default function AddExpenseModal({ open, onClose, onAdded }: Props) {
   const watchType      = form.watch("type")
   const watchAccountId = form.watch("account_id")
 
-  // Load accounts when modal opens
   useEffect(() => {
-    if (!open || !user) return
-    setLoadingAcc(true)
-    getAccounts(user.id).then((accs) => {
-      setAccounts(accs)
-      if (accs.length > 0) form.setValue("account_id", accs[0].id)
-      setLoadingAcc(false)
-    })
-  }, [open, user])
+    if (open && accounts.length > 0) {
+      form.setValue("account_id", accounts[0].id)
+    }
+  }, [open, accounts])
 
-  // Reset form when modal closes
   useEffect(() => {
     if (!open) {
       form.reset({
@@ -77,7 +73,6 @@ export default function AddExpenseModal({ open, onClose, onAdded }: Props) {
     }
   }, [open])
 
-  // Close on Escape key
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose()
@@ -100,12 +95,6 @@ export default function AddExpenseModal({ open, onClose, onAdded }: Props) {
 
   if (!open) return null
 
-  const TYPE_TABS = [
-    { value: "expense",  label: "Expense",  icon: TrendingDown  },
-    { value: "income",   label: "Income",   icon: TrendingUp    },
-    { value: "transfer", label: "Transfer", icon: ArrowLeftRight },
-  ] as const
-
   return (
     <div
       ref={overlayRef}
@@ -120,11 +109,10 @@ export default function AddExpenseModal({ open, onClose, onAdded }: Props) {
         <style>{`
           @keyframes modalIn {
             from { opacity: 0; transform: translateY(12px) scale(0.98); }
-            to   { opacity: 1; transform: translateY(0)    scale(1);    }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
           }
         `}</style>
 
-        {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-stone-100">
           <div>
             <h2 className="text-[15px] font-semibold text-stone-900 tracking-tight">Add transaction</h2>
@@ -142,7 +130,6 @@ export default function AddExpenseModal({ open, onClose, onAdded }: Props) {
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 py-5 flex flex-col gap-4">
 
-          {/* Type toggle */}
           <div className="flex gap-1 p-1 bg-stone-100 rounded-xl">
             {TYPE_TABS.map(({ value, label, icon: Icon }) => (
               <button
@@ -165,7 +152,6 @@ export default function AddExpenseModal({ open, onClose, onAdded }: Props) {
             ))}
           </div>
 
-          {/* Amount — big and prominent */}
           <div className="flex flex-col gap-1.5">
             <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400 flex items-center gap-1">
               <DollarSign size={10} /> Amount
@@ -188,26 +174,20 @@ export default function AddExpenseModal({ open, onClose, onAdded }: Props) {
             )}
           </div>
 
-          {/* From account */}
-          {loadingAcc ? (
-            <div className="h-10 bg-stone-100 rounded-lg animate-pulse" />
-          ) : (
-            <SettingsSelect
-              label={watchType === "transfer" ? "From account" : "Account"}
-              icon={Wallet}
-              error={form.formState.errors.account_id?.message}
-              {...form.register("account_id")}
-            >
-              <option value="">Select account</option>
-              {accounts.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name} · ₱{a.balance.toLocaleString()}
-                </option>
-              ))}
-            </SettingsSelect>
-          )}
+          <SettingsSelect
+            label={watchType === "transfer" ? "From account" : "Account"}
+            icon={Wallet}
+            error={form.formState.errors.account_id?.message}
+            {...form.register("account_id")}
+          >
+            <option value="">Select account</option>
+            {accounts.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name} · ₱{a.balance.toLocaleString()}
+              </option>
+            ))}
+          </SettingsSelect>
 
-          {/* Transfer destination */}
           {watchType === "transfer" && (
             <SettingsSelect
               label="To account"
@@ -226,7 +206,6 @@ export default function AddExpenseModal({ open, onClose, onAdded }: Props) {
             </SettingsSelect>
           )}
 
-          {/* Category */}
           {watchType !== "transfer" && (
             <SettingsSelect
               label="Category"
@@ -240,7 +219,6 @@ export default function AddExpenseModal({ open, onClose, onAdded }: Props) {
             </SettingsSelect>
           )}
 
-          {/* Note + Date */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400 flex items-center gap-1">
@@ -264,8 +242,7 @@ export default function AddExpenseModal({ open, onClose, onAdded }: Props) {
             </div>
           </div>
 
-          {/* No accounts warning */}
-          {!loadingAcc && accounts.length === 0 && (
+          {accounts.length === 0 && (
             <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
               <p className="mono text-[11px] text-amber-700">
                 You need to add an account first before adding transactions.
@@ -273,7 +250,6 @@ export default function AddExpenseModal({ open, onClose, onAdded }: Props) {
             </div>
           )}
 
-          {/* Actions */}
           <div className="flex gap-2 justify-end pt-1">
             <Button
               type="button"

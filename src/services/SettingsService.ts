@@ -10,7 +10,7 @@ export async function getProfile(userId: string): Promise<Profile | null> {
     .from("profiles")
     .select("*")
     .eq("id", userId)
-    .maybeSingle()                      
+    .maybeSingle()
 
   if (error) {
     console.error("[getProfile]", error)
@@ -41,62 +41,28 @@ export async function updateProfile(
   return error.message
 }
 
-// export async function uploadAvatar(
-//   userId: string,
-//   file: File
-// ): Promise<{ url: string | null; error: string | null }> {
-//   const ext  = file.name.split(".").pop()
-//   const path = `${userId}/avatar.${ext}`
-
-//   const { error: uploadError } = await supabase.storage
-//     .from("avatars")
-//     .upload(path, file, { upsert: true })
-
-//   if (uploadError) return { url: null, error: uploadError.message }
-
-//   const { data } = supabase.storage.from("avatars").getPublicUrl(path)
-
-//   const { error: updateError } = await supabase
-//     .from("profiles")
-//     .update({ avatar_url: data.publicUrl })
-//     .eq("id", userId)
-
-//   if (updateError) return { url: null, error: updateError.message }
-//   return { url: data.publicUrl, error: null }
-// }
-
 export async function uploadAvatar(userId: string, file: File) {
   try {
     const url = await handleUploadAvatar(file)
-
     const { error } = await saveAvatarUrl(userId, url)
-
-    if (error) {
-      return { url: null, error: error.message }
-    }
-
+    if (error) return { url: null, error: error.message }
     return { url, error: null }
-  } catch (err: any) {
-    return { url: null, error: err.message }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Upload failed"
+    return { url: null, error: message }
   }
 }
 
-export async function handleUploadAvatar(file: File) {
+export async function handleUploadAvatar(file: File): Promise<string> {
   const formData = new FormData()
-
   formData.append("file", file)
   formData.append("upload_preset", "salapiq")
 
-  const res = await fetch(
+  const res  = await fetch(
     "https://api.cloudinary.com/v1_1/dahoy0gkp/image/upload",
-    {
-      method: "POST",
-      body: formData,
-    }
+    { method: "POST", body: formData }
   )
-
   const data = await res.json()
-
   return data.secure_url as string
 }
 
@@ -105,7 +71,6 @@ export async function saveAvatarUrl(userId: string, url: string) {
     .from("profiles")
     .update({ avatar_url: url })
     .eq("id", userId)
-
   return { error }
 }
 
@@ -132,7 +97,7 @@ export async function getUserSettings(
     .from("user_settings")
     .select("*")
     .eq("id", userId)
-    .maybeSingle()               
+    .maybeSingle()
 
   if (error) {
     console.error("[getUserSettings]", error)
@@ -148,7 +113,6 @@ export async function updateUserSettings(
   const { error } = await supabase
     .from("user_settings")
     .upsert({ id: userId, ...payload }, { onConflict: "id" })
-    .eq("id", userId)
 
   return error ? error.message : null
 }
@@ -158,8 +122,10 @@ export function extractNotificationPrefs(
 ): NotificationPrefs {
   if (!settings) {
     return {
-      weeklyReport: true, budgetAlerts: true,
-      goalReminders: true, loginAlerts: true,
+      weeklyReport:  true,
+      budgetAlerts:  true,
+      goalReminders: true,
+      loginAlerts:   true,
     }
   }
   return {
@@ -205,7 +171,6 @@ export async function updateAppPreferences(
 ): Promise<string | null> {
   return updateUserSettings(userId, prefs)
 }
-
 
 export async function deactivateAccount(): Promise<string | null> {
   return "CONTACT_SUPPORT"
