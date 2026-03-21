@@ -231,7 +231,6 @@ export async function getFamilyTransactions(
     pageSize = 10,
   } = filters
  
-  // ✅ get shared account IDs first
   const { data: sharedAccounts } = await supabase
     .from("accounts")
     .select("id")

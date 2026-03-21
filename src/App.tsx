@@ -15,6 +15,9 @@ import Transactions from './pages/subscriber/Transactions'
 import Settings from './pages/subscriber/Settings'
 import FamilyShell from './pages/subscriber/Family'
 import Ledger from './pages/subscriber/Ledger'
+import Budget from './pages/subscriber/Budget'
+import Savings from './pages/subscriber/Savings'
+import Recurring from './pages/subscriber/Recurring'
 
 function App() {
   const init = useAuthStore((s) => s.init)
@@ -42,8 +45,11 @@ function App() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard"    element={<Dashboard />}    />
           <Route path="ledger" element={<Ledger />} />
+          <Route path="budget" element={<Budget />} />
+          <Route path="savings" element={<Savings />} />
           <Route path="accounts"     element={<Accounts />}     />
           <Route path="transactions" element={<Transactions />} />
+          <Route path="recurring" element={<Recurring />} />
           <Route path="family/*"     element={<FamilyShell />}  />
           <Route path="settings"     element={<Settings />}     />
         </Route>

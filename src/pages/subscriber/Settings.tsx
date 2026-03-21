@@ -83,7 +83,6 @@ export default function Settings() {
     resolver: zodResolver(updateEmailSchema),
   })
 
-  // ── Reset form when profile loads from store ──────────────
   useEffect(() => {
     if (!profile || profileLoading) return
     profileForm.reset({
@@ -96,7 +95,6 @@ export default function Settings() {
     }, { keepDirty: false })
   }, [profile, profileLoading])
 
-  // ── Sync local pref state when store loads ────────────────
   useEffect(() => { setLocalTheme(storeTheme)           }, [storeTheme])
   useEffect(() => { setLocalLanguage(storeLanguage)     }, [storeLanguage])
   useEffect(() => { setLocalDateFormat(storeDateFormat) }, [storeDateFormat])

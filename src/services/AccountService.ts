@@ -59,7 +59,6 @@ export async function updateAccount(
 }
 
 export async function deleteAccount(id: string): Promise<string | null> {
-  // Soft delete — set is_active = false
   const { error } = await supabase
     .from("accounts")
     .update({ is_active: false })
@@ -86,6 +85,7 @@ export type TransactionFilters = {
   page?:     number
   pageSize?: number
   accountId?: string
+  category?:  string
 }
  
 export type PaginatedTransactions = {
