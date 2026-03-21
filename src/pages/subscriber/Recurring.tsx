@@ -278,7 +278,6 @@ export default function Recurring() {
                 ))}
               </div>
 
-              {/* Account */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Account</Label>
                 <div className="relative">
@@ -296,7 +295,6 @@ export default function Recurring() {
                 {form.formState.errors.account_id && <Err msg={form.formState.errors.account_id.message!} />}
               </div>
 
-              {/* Amount */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Amount</Label>
                 <div className="relative">
@@ -312,7 +310,6 @@ export default function Recurring() {
                 {form.formState.errors.amount && <Err msg={form.formState.errors.amount.message!} />}
               </div>
 
-              {/* Day of month */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">
                   Day of month <span className="text-stone-300 normal-case">(runs on this day every month)</span>
@@ -331,7 +328,6 @@ export default function Recurring() {
                 {form.formState.errors.day_of_month && <Err msg={form.formState.errors.day_of_month.message!} />}
               </div>
 
-              {/* Category */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">
                   Category <span className="text-stone-300 normal-case">(optional)</span>
@@ -350,7 +346,6 @@ export default function Recurring() {
                 </div>
               </div>
 
-              {/* Note */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">
                   Note <span className="text-stone-300 normal-case">(e.g. Salary, Netflix)</span>

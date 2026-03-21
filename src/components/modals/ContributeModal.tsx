@@ -9,7 +9,7 @@ import {
   contributionSchema, type ContributionForm,
   type SavingsGoal, getGoalPercent,
 } from "@/types/SavingsTypes"
-import { addContribution } from "@/services/savingsService"
+import { addContribution } from "@/services/SavingsService"
 import SpinnerBtn from "@/components/customs/SpinnerBtn"
 import { X, PiggyBank } from "lucide-react"
 import { Input } from "@/components/ui/input"

@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { useToast } from "@/hooks/useToast"
 import { useSavingsStore } from "@/stores/useSavingsStore"
 import { useFamilyStore }  from "@/stores/useFamilyStore"
-import { deleteGoal, updateGoal } from "@/services/savingsService"
+import { deleteGoal, updateGoal } from "@/services/SavingsService"
 import { type SavingsGoal } from "@/types/SavingsTypes"
 import {
   GOAL_STATUS_FILTER, type GoalStatusFilter,
