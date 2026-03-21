@@ -1,6 +1,5 @@
 import { pipeline, env } from "@huggingface/transformers"
 
-// Cache model in browser storage — only downloads once (~80MB)
 env.allowLocalModels = false
 env.useBrowserCache = true
 

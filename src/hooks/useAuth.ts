@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import type { User, Session } from "@supabase/supabase-js"
-import { useAccountStore }       from "@/stores/useAccountStore"
-import { useFamilyStore }        from "@/stores/useFamilyStore"
-import { useTransactionStore }   from "@/stores/useTransactionStore"
-import { useNotificationStore }  from "@/stores/useNotificationStore"
-import { useProfileStore }       from "@/stores/useProfileStore"
-import { useSettingStore }  from "@/stores/useSettingStore"
+import { useAccountStore }      from "@/stores/useAccountStore"
+import { useFamilyStore }       from "@/stores/useFamilyStore"
+import { useTransactionStore }  from "@/stores/useTransactionStore"
+import { useNotificationStore } from "@/stores/useNotificationStore"
+import { useProfileStore }      from "@/stores/useProfileStore"
+import { useSettingStore }      from "@/stores/useSettingStore"
+import { useSavingsStore }      from "@/stores/useSavingsStore"
+import { useBudgetStore }       from "@/stores/useBudgetStore"
 
 export function useAuth() {
   const [user,    setUser]    = useState<User | null>(null)
@@ -19,6 +21,8 @@ export function useAuth() {
   const resetNotifications = useNotificationStore((s) => s.reset)
   const resetProfile       = useProfileStore((s) => s.reset)
   const resetSettings      = useSettingStore((s) => s.reset)
+  const resetSavings       = useSavingsStore((s) => s.reset)
+  const resetBudget        = useBudgetStore((s) => s.reset)
 
   useEffect(() => {
     let mounted = true
@@ -42,6 +46,8 @@ export function useAuth() {
           resetNotifications()
           resetProfile()
           resetSettings()
+          resetSavings()
+          resetBudget()
         }
 
         setSession((prev) => {
@@ -60,7 +66,7 @@ export function useAuth() {
       mounted = false
       subscription.unsubscribe()
     }
-  }, [resetAccounts, resetFamily, resetTransactions, resetNotifications, resetProfile, resetSettings])
+  }, [resetAccounts, resetFamily, resetTransactions, resetNotifications, resetProfile, resetSettings, resetSavings, resetBudget])
 
   return { user, session, loading }
 }

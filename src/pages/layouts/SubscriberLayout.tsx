@@ -9,10 +9,12 @@ import { useTransactionStore }  from "@/stores/useTransactionStore"
 import { useNotificationStore } from "@/stores/useNotificationStore"
 import { useProfileStore }      from "@/stores/useProfileStore"
 import { useSettingStore } from "@/stores/useSettingStore"
+import { useSavingsStore }      from "@/stores/useSavingsStore"
+import { useBudgetStore }       from "@/stores/useBudgetStore"
 import {
   LayoutDashboard, ListChecks, Target,
   PiggyBank, Sparkles, Plus, LogOut,
-  Settings, Users,
+  Settings, Users, RefreshCw,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import logo from "@/assets/logo.png"
@@ -24,11 +26,10 @@ const CURRENT_YEAR  = new Date().getFullYear()
 
 const NAV_ITEMS = [
   { icon: LayoutDashboard, label: "Dashboard",    path: "/app/dashboard"    },
-  { icon: ListChecks,      label: "Ledger",       path: "/app/ledger" },
-  // { icon: Wallet,          label: "Accounts",     path: "/app/accounts"     },
-  // { icon: ListChecks,      label: "Transactions", path: "/app/transactions" },
+  { icon: ListChecks,      label: "Ledger",       path: "/app/ledger"    },
   { icon: Target,          label: "Budget",       path: "/app/budget"       },
   { icon: PiggyBank,       label: "Savings",      path: "/app/savings"      },
+  { icon: RefreshCw, label: "Recurring", path: "/app/recurring" },
   { icon: Users,           label: "Family",       path: "/app/family"       },
   { icon: Sparkles,        label: "AI Classify",  path: "/app/classify"     },
   { icon: Settings,        label: "Settings",     path: "/app/settings"     },
@@ -61,6 +62,12 @@ export default function SubscriberLayout() {
   const fetchSettings      = useSettingStore((s) => s.fetch)
   const resetSettings      = useSettingStore((s) => s.reset)
 
+  const fetchSavings       = useSavingsStore((s) => s.fetch)
+  const resetSavings       = useSavingsStore((s) => s.reset)
+
+  const fetchBudget        = useBudgetStore((s) => s.fetch)
+  const resetBudget        = useBudgetStore((s) => s.reset)
+
   const [showAddExpense, setShowAddExpense] = useState(false)
 
   useSessionTimeout()
@@ -73,7 +80,9 @@ export default function SubscriberLayout() {
     fetchNotifications(user.id)
     fetchProfile(user.id)
     fetchSettings(user.id)
-  }, [user, fetchAccounts, fetchFamily, fetchSummary, fetchNotifications, fetchProfile, fetchSettings])
+    fetchSavings(user.id)
+    fetchBudget(user.id, CURRENT_MONTH, CURRENT_YEAR)
+  }, [user, fetchAccounts, fetchFamily, fetchSummary, fetchNotifications, fetchProfile, fetchSettings, fetchSavings, fetchBudget])
 
   useEffect(() => {
     if (!loading && !user) {
@@ -90,6 +99,8 @@ export default function SubscriberLayout() {
     resetNotifications()
     resetProfile()
     resetSettings()
+    resetSavings()
+    resetBudget()
     await logout()
     navigate("/auth/login", { replace: true })
   }
@@ -107,14 +118,11 @@ export default function SubscriberLayout() {
 
   return (
     <div className="min-h-screen bg-[#f7f5f0] font-['Bricolage_Grotesque',sans-serif]">
-
       <nav className="sticky top-0 z-40 bg-white border-b border-stone-200/80 shadow-[0_1px_12px_rgba(0,0,0,0.04)]">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center gap-4">
-
           <div className="flex items-center gap-2 mr-4 shrink-0">
             <img src={logo} alt="Salapiq" className="h-10 w-auto object-contain" />
           </div>
-
           <div className="flex items-center gap-0.5 flex-1">
             {NAV_ITEMS.map(({ icon: Icon, label, path }) => {
               const active = location.pathname.startsWith(path)
@@ -135,26 +143,20 @@ export default function SubscriberLayout() {
               )
             })}
           </div>
-
           <div className="flex items-center gap-2 shrink-0">
             <NotificationBell />
-
             <button
               onClick={() => setShowAddExpense(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] font-medium transition-colors"
             >
-              <Plus size={12} />
-              Add expense
+              <Plus size={12} /> Add expense
             </button>
-
             <div className="flex items-center gap-2 pl-2 border-l border-stone-100">
               <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center">
                 <span className="mono text-[10px] font-medium text-emerald-700">{initials}</span>
               </div>
               <div className="hidden sm:block">
-                <p className="text-[11px] font-medium text-stone-700 leading-none">
-                  {user?.email?.split("@")[0]}
-                </p>
+                <p className="text-[11px] font-medium text-stone-700 leading-none">{user?.email?.split("@")[0]}</p>
                 <p className="mono text-[9px] text-stone-400 mt-0.5">subscriber</p>
               </div>
               <button
@@ -168,11 +170,9 @@ export default function SubscriberLayout() {
           </div>
         </div>
       </nav>
-
       <main className="max-w-6xl mx-auto px-6 py-8">
         <Outlet />
       </main>
-
       <AddExpenseModal
         open={showAddExpense}
         onClose={() => setShowAddExpense(false)}

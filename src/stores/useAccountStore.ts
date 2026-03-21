@@ -6,7 +6,7 @@ interface AccountState {
   accounts:     Account[]
   loading:      boolean
   initialized:  boolean
-  lastAdded:    number        // ✅ changes every time a transaction is added
+  lastAdded:    number       
 
   totalBalance: () => number
 

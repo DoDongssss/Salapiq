@@ -106,7 +106,6 @@ export function useExpenseAI() {
   const classify = useCallback(async (description: string) => {
     if (!description.trim()) { setPrediction(null); return }
 
-    // Check user corrections first
     const feedbackHit = checkFeedback(description)
     if (feedbackHit) { setPrediction(feedbackHit); return }
 
