@@ -23,10 +23,18 @@ export const recurringSchema = z.object({
   day_of_month: z.number().min(1).max(28),
   category:     z.string().optional(),
   note:         z.string().optional(),
-  is_active:    z.boolean().default(true),
+  is_active:    z.boolean(),             
 })
 
-export type RecurringForm = z.infer<typeof recurringSchema>
+export type RecurringForm = {
+  account_id:   string
+  type:         "income" | "expense"
+  amount:       number
+  day_of_month: number
+  category?:    string
+  note?:        string
+  is_active:    boolean
+}
 
 export const DAY_OPTIONS = Array.from({ length: 28 }, (_, i) => ({
   value: i + 1,
