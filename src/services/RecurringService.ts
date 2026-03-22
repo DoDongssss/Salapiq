@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabaseClient"
-import type { RecurringTransaction, RecurringForm } from "@/types/RecurringTypes"
+import type { RecurringTransaction, RecurringFormOutput } from "@/types/RecurringTypes"
 
 export async function getRecurring(userId: string): Promise<RecurringTransaction[]> {
   const { data, error } = await supabase
@@ -17,7 +17,7 @@ export async function getRecurring(userId: string): Promise<RecurringTransaction
 
 export async function createRecurring(
   userId:  string,
-  payload: RecurringForm
+  payload: RecurringFormOutput
 ): Promise<{ data: RecurringTransaction | null; error: string | null }> {
   const { data, error } = await supabase
     .from("recurring_transactions")
@@ -41,7 +41,7 @@ export async function createRecurring(
 
 export async function updateRecurring(
   id:      string,
-  payload: Partial<RecurringForm>
+  payload: Partial<RecurringFormOutput>
 ): Promise<string | null> {
   const { error } = await supabase
     .from("recurring_transactions")
