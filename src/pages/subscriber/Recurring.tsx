@@ -9,8 +9,11 @@ import {
   toggleRecurring, deleteRecurring,
 } from "@/services/RecurringService"
 import {
-  recurringSchema, type RecurringForm,
-  type RecurringTransaction, DAY_OPTIONS,
+  recurringSchema,
+  type RecurringFormInput,
+  type RecurringFormOutput,
+  type RecurringTransaction,
+  DAY_OPTIONS,
 } from "@/types/RecurringTypes"
 import { TRANSACTION_CATEGORIES } from "@/types/AccountTypes"
 import SpinnerBtn from "@/components/customs/SpinnerBtn"
@@ -51,7 +54,8 @@ export default function Recurring() {
   const [deleting,  setDeleting]  = useState<string | null>(null)
   const [toggling,  setToggling]  = useState<string | null>(null)
 
-  const form = useForm<RecurringForm>({
+  // ✅ useForm uses the INPUT type
+  const form = useForm<RecurringFormInput>({
     resolver: zodResolver(recurringSchema),
     defaultValues: {
       account_id:    accounts[0]?.id ?? "",
@@ -65,7 +69,8 @@ export default function Recurring() {
     },
   })
 
-  const watchType = form.watch("type")
+  const watchType         = form.watch("type")
+  const watchReminderDays = form.watch("reminder_days")
 
   useEffect(() => {
     if (!user) return
@@ -117,7 +122,8 @@ export default function Recurring() {
     setShowModal(true)
   }
 
-  const onSubmit = async (data: RecurringForm) => {
+  // ✅ onSubmit uses the OUTPUT type (defaults resolved)
+  const onSubmit = async (data: RecurringFormOutput) => {
     if (!user) return
     if (editEntry) {
       const error = await updateRecurring(editEntry.id, data)
@@ -266,7 +272,6 @@ export default function Recurring() {
 
             <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 py-5 flex flex-col gap-4">
 
-              {/* Type toggle */}
               <div className="flex gap-1 p-1 bg-stone-100 rounded-xl">
                 {(["income", "expense"] as const).map((t) => (
                   <button
@@ -288,7 +293,6 @@ export default function Recurring() {
                 ))}
               </div>
 
-              {/* Account */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Account</Label>
                 <div className="relative">
@@ -308,7 +312,6 @@ export default function Recurring() {
                 )}
               </div>
 
-              {/* Amount */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Amount</Label>
                 <div className="relative">
@@ -329,11 +332,8 @@ export default function Recurring() {
                 )}
               </div>
 
-              {/* Day of month */}
               <div className="flex flex-col gap-1.5">
-                <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">
-                  Day of month
-                </Label>
+                <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Day of month</Label>
                 <div className="relative">
                   <select
                     className="w-full h-10 pl-3 pr-8 text-sm bg-stone-50 border border-stone-200 rounded-xl text-stone-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 appearance-none cursor-pointer"
@@ -348,7 +348,6 @@ export default function Recurring() {
                 <p className="mono text-[10px] text-stone-400">Runs on this day every month</p>
               </div>
 
-              {/* Reminder days */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">
                   Reminder days before
@@ -361,7 +360,7 @@ export default function Recurring() {
                       onClick={() => form.setValue("reminder_days", d)}
                       className={cn(
                         "flex-1 h-9 mono text-[11px] rounded-xl border transition-all",
-                        form.watch("reminder_days") === d
+                        watchReminderDays === d
                           ? "bg-emerald-50 border-emerald-400 text-emerald-700"
                           : "bg-stone-50 border-stone-200 text-stone-500 hover:border-stone-300"
                       )}
@@ -372,7 +371,6 @@ export default function Recurring() {
                 </div>
               </div>
 
-              {/* Category */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">
                   Category <span className="text-stone-300 normal-case font-normal">(optional)</span>
@@ -391,7 +389,6 @@ export default function Recurring() {
                 </div>
               </div>
 
-              {/* Note */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">
                   Note <span className="text-stone-300 normal-case font-normal">(e.g. Salary, Netflix)</span>
@@ -466,7 +463,7 @@ function EntryGroup({
             <div
               key={e.id}
               className={cn(
-                "flex items-center gap-3 px-5 py-4 border-b border-stone-50 last:border-0 transition-colors",
+                "flex items-center gap-3 px-5 py-4 border-b border-stone-50 last:border-0",
                 !e.is_active && "opacity-50"
               )}
             >
