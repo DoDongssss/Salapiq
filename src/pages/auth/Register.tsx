@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { registerSchema, type RegisterForm } from "@/types/AuthTypes"
+import { registerSchema, type RegisterForm } from "@/types"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Eye, EyeOff, ArrowRight, Sparkles, TrendingUp, PiggyBank, BarChart2 } from "lucide-react"

@@ -2,11 +2,11 @@ import { Pencil, Trash2, Plus, Pause, CheckCircle2, Calendar, Users } from "luci
 import {
   getGoalPercent, getDaysLeft,
   type SavingsGoal,
-} from "@/types/SavingsTypes"
+} from "@/types"
 import {
   GOAL_STATUS_COLORS, GOAL_PRIORITY_COLORS,
   GOAL_CATEGORIES,
-} from "@/config/subscriber"
+} from "@/config/savings"
 import { cn } from "@/lib/utils"
 
 type Props = {

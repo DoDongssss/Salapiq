@@ -4,11 +4,9 @@ import { useToast } from "@/hooks/useToast"
 import { useAIClassifyStore } from "@/stores/useAIClassifyStore"
 import { useSettingStore } from "@/stores/useSettingStore"
 import { applyCategory, skipTransaction } from "@/services/AIClassifyService"
-import { TRANSACTION_CATEGORIES } from "@/types/AccountTypes"
-import type { ClassifyQueueItem } from "@/types/AIClassifyTypes"
-import {
-  AI_SOURCE_LABELS, AI_SOURCE_COLORS,
-} from "@/config/subscriber"
+import { TRANSACTION_CATEGORIES } from "@/types"
+import type { ClassifyQueueItem } from "@/types"
+import { AI_SOURCE_LABELS, AI_SOURCE_COLORS } from "@/config/ai-classify"
 import {
   Sparkles, CheckCircle2, X, ChevronDown,
   TrendingDown, BarChart2,

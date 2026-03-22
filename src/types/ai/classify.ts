@@ -1,5 +1,5 @@
 import { z } from "zod"
-import type { TransactionWithAccount } from "@/services/AccountService"
+import type { TransactionWithAccount } from "../finance/account"
 
 export type AIClassification = {
   id:                  string
@@ -32,9 +32,6 @@ export const applyClassificationSchema = z.object({
 })
 
 export type ApplyClassificationForm = z.infer<typeof applyClassificationSchema>
-
-// ─── Keyword map — used for fast offline classification ───────
-// Each category has keywords that trigger it
 
 export const CATEGORY_KEYWORDS: Record<string, string[]> = {
   "Food & Dining": [

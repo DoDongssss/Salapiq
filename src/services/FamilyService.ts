@@ -1,8 +1,8 @@
 import { supabase } from "@/lib/supabaseClient"
 import type {
   Family, FamilyMember, FamilyWithMembers, CreateFamilyForm,
-} from "@/types/FamilyTypes"
-import type { TransactionWithAccount } from "./AccountService"
+} from "@/types"
+import type { TransactionWithAccount } from "@/types/finance/account"
 
 export type { Family, FamilyMember, FamilyWithMembers, CreateFamilyForm }
 

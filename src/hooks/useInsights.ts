@@ -3,7 +3,7 @@ import { useBudgetStore }      from "@/stores/useBudgetStore"
 import { useSavingsStore }     from "@/stores/useSavingsStore"
 import { useTransactionStore } from "@/stores/useTransactionStore"
 import { useAccountStore }     from "@/stores/useAccountStore"
-import { getBudgetStatus }     from "@/types/BudgetTypes"
+import { getBudgetStatus }     from "@/types"
 import {
   AlertTriangle, Lightbulb, Target,
   TrendingDown, TrendingUp, PiggyBank,

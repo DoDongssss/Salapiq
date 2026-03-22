@@ -47,7 +47,6 @@ export const contributionSchema = z.object({
 
 export type ContributionForm = z.infer<typeof contributionSchema>
 
-
 export function getGoalPercent(goal: SavingsGoal): number {
   if (goal.target_amount <= 0) return 0
   return Math.min(Math.round((goal.current_amount / goal.target_amount) * 100), 100)

@@ -8,7 +8,7 @@ import { useFamilyStore }  from "@/stores/useFamilyStore"
 import {
   contributionSchema, type ContributionForm,
   type SavingsGoal, getGoalPercent,
-} from "@/types/SavingsTypes"
+} from "@/types"
 import { addContribution } from "@/services/SavingsService"
 import SpinnerBtn from "@/components/customs/SpinnerBtn"
 import { X, PiggyBank } from "lucide-react"

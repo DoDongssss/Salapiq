@@ -5,19 +5,22 @@ import { useAccountStore } from "@/stores/useAccountStore"
 import { useFamilyStore }  from "@/stores/useFamilyStore"
 import {
   type Account, TRANSACTION_CATEGORIES,
-} from "@/types/AccountTypes"
+  type TransactionWithAccount, type TransactionFilters,
+} from "@/types"
 import {
   getTransactions, deleteTransaction, getMonthSummary, getTotalBalance,
   deleteAccount,
-  type TransactionWithAccount, type TransactionFilters,
 } from "@/services/AccountService"
+import { getTransactionIdsWithSplits } from "@/services/SplitService"
 import {
   TRANSACTION_TYPE_ICONS, TRANSACTION_TYPE_COLORS,
   TRANSACTION_AMOUNT_COLORS, TRANSACTION_AMOUNT_PREFIX,
   ACCOUNT_TYPE_ICONS,
+} from "@/config/transactions"
+import {
   PAGE_SIZE, DATE_PRESETS, TYPE_OPTIONS,
   type DatePreset as Date_Preset, type TypeFilter as Type_Filter,
-} from "@/config/subscriber"
+} from "@/config/ledger"
 import { formatDate, currentMonthLabel } from "@/lib/utils"
 import SummaryCard          from "@/components/customs/SummaryCard"
 import Pagination           from "@/components/customs/Pagination"
@@ -113,7 +116,7 @@ export default function Ledger() {
   const [totalPages,   setTotalPages]   = useState(1)
   const [txnLoading,   setTxnLoading]   = useState(true)
   const [summary,      setSummary]      = useState({ income: 0, expenses: 0, net: 0 })
-  const [splitTxnIds, setSplitTxnIds] = useState<Set<string>>(new Set())
+  const [txnIdsWithSplits, setTxnIdsWithSplits] = useState<Set<string>>(new Set())
 
   const [selectedAccount,  setSelectedAccount]  = useState<string | null>(null)
   const [page,             setPage]             = useState(1)
@@ -133,6 +136,18 @@ export default function Ledger() {
   const [deleting,         setDeleting]         = useState<string | null>(null)
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (!transactions.length) {
+      setTxnIdsWithSplits(new Set())
+      return
+    }
+    let cancelled = false
+    getTransactionIdsWithSplits(transactions.map((t) => t.id)).then((ids) => {
+      if (!cancelled) setTxnIdsWithSplits(ids)
+    })
+    return () => { cancelled = true }
+  }, [transactions])
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -554,8 +569,7 @@ export default function Ledger() {
                         </button>
                           {family &&
                           t.type === "expense" &&
-                          t.is_split !== true &&
-                          !splitTxnIds.has(t.id) &&
+                          (t.is_split !== true && !txnIdsWithSplits.has(t.id)) &&
                           familyAccountIds.has(t.account_id) &&
                           family.members.find((m) => m.user_id === user?.id)?.role === "admin" && (
                             <button
@@ -606,7 +620,6 @@ export default function Ledger() {
           totalAmount={splittingTxn.amount}
           onClose={() => setSplittingTxn(null)}
           onSplit={() => {
-            setSplitTxnIds((prev) => new Set([...prev, splittingTxn.id]))
             setSplittingTxn(null)
             reloadTxns()
           }}

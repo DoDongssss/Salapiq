@@ -3,13 +3,13 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAuth } from "@/hooks/useAuth"
 import { useToast } from "@/hooks/useToast"
-import { budgetSchema, type BudgetForm, type BudgetSummary, getBudgetStatus } from "@/types/BudgetTypes"
-import { MONTH_LABELS, STATUS_COLORS, STATUS_LABELS, STATUS_TEXT } from "@/config/subscriber"
+import { budgetSchema, type BudgetForm, type BudgetSummary, getBudgetStatus } from "@/types"
+import { MONTH_LABELS, STATUS_COLORS, STATUS_LABELS, STATUS_TEXT } from "@/config/budget"
 import {
   getBudgetSummary, createBudget,
   updateBudget, deleteBudget, getBudgetOverview,
 } from "@/services/BudgetService"
-import { TRANSACTION_CATEGORIES } from "@/types/AccountTypes"
+import { TRANSACTION_CATEGORIES } from "@/types"
 import SpinnerBtn from "@/components/customs/SpinnerBtn"
 import { Plus, Pencil, Trash2, X, ChevronLeft, ChevronRight, Target } from "lucide-react"
 import { Input } from "@/components/ui/input"

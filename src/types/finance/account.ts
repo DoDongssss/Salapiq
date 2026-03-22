@@ -30,9 +30,35 @@ export type Transaction = {
   ai_category:    string | null
   ai_confidence:  number | null
   ai_classified:  boolean
+  is_split?:      boolean
   receipt_url:    string | null
   created_at:     string
   updated_at:     string
+}
+
+export type TransactionWithAccount = Transaction & {
+  account:    Pick<Account, "name" | "color" | "icon" | "type">
+  to_account: Pick<Account, "name" | "color" | "icon" | "type"> | null
+  member?:    { full_name: string; avatar_url: string | null } | null
+}
+
+export type TransactionFilters = {
+  type?:     "income" | "expense" | "transfer"
+  from?:     string
+  to?:       string
+  search?:   string
+  page?:     number
+  pageSize?: number
+  accountId?: string
+  category?:  string
+}
+
+export type PaginatedTransactions = {
+  data:       TransactionWithAccount[]
+  total:      number
+  totalPages: number
+  page:       number
+  pageSize:   number
 }
 
 export const accountSchema = z.object({
@@ -51,7 +77,7 @@ export type AccountForm = z.infer<typeof accountSchema>
 export const transactionSchema = z.object({
   account_id:    z.string().min(1, "select an account"),
   amount:        z.number({ error: "must be a number" })
-                    .min(0, "must be positive").optional(), 
+                    .min(0, "must be positive").optional(),
   type:          z.enum(["income", "expense", "transfer"]),
   category:      z.string().optional(),
   note:          z.string().optional(),

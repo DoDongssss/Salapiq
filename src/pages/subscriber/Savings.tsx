@@ -4,10 +4,10 @@ import { useToast } from "@/hooks/useToast"
 import { useSavingsStore } from "@/stores/useSavingsStore"
 import { useFamilyStore }  from "@/stores/useFamilyStore"
 import { deleteGoal, updateGoal } from "@/services/SavingsService"
-import { type SavingsGoal } from "@/types/SavingsTypes"
+import { type SavingsGoal } from "@/types"
 import {
   GOAL_STATUS_FILTER, type GoalStatusFilter,
-} from "@/config/subscriber"
+} from "@/config/savings"
 import SavingsCard      from "@/components/customs/SavingsCard"
 import GoalDetailModal  from "@/components/modals/GoalDetailModal"
 import GoalModal      from "@/components/modals/GoalModal"

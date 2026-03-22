@@ -4,9 +4,11 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useAuth } from "@/hooks/useAuth"
 import { useToast } from "@/hooks/useToast"
 import { useAccountStore } from "@/stores/useAccountStore"
-import { transactionSchema, type TransactionForm, TRANSACTION_CATEGORIES } from "@/types/AccountTypes"
+import {
+  transactionSchema, type TransactionForm, TRANSACTION_CATEGORIES,
+  type TransactionWithAccount,
+} from "@/types"
 import { createTransaction, updateTransaction } from "@/services/AccountService"
-import type { TransactionWithAccount } from "@/services/AccountService"
 import SettingsSelect from "@/components/customs/SettingsSelect"
 import SpinnerBtn from "@/components/customs/SpinnerBtn"
 import {

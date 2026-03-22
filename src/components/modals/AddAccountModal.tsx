@@ -7,7 +7,7 @@ import { useAccountStore } from "@/stores/useAccountStore"
 import {
   accountSchema, type AccountForm, type Account,
   ACCOUNT_TYPES, ACCOUNT_PROVIDERS, ACCOUNT_COLORS,
-} from "@/types/AccountTypes"
+} from "@/types"
 import { createAccount, updateAccount } from "@/services/AccountService"
 import SettingsSelect from "@/components/customs/SettingsSelect"
 import SpinnerBtn from "@/components/customs/SpinnerBtn"

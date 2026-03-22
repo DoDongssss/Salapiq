@@ -4,10 +4,10 @@ import { useSavingsStore } from "@/stores/useSavingsStore"
 import { useFamilyStore }  from "@/stores/useFamilyStore"
 import {
   type SavingsGoal, getGoalPercent, getDaysLeft,
-} from "@/types/SavingsTypes"
+} from "@/types"
 import {
   GOAL_CATEGORIES, GOAL_STATUS_COLORS, GOAL_PRIORITY_COLORS,
-} from "@/config/subscriber"
+} from "@/config/savings"
 import {
   X, PiggyBank, Calendar, TrendingUp,
   Clock, Pencil, Plus, Users,

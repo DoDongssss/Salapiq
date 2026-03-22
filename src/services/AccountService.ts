@@ -1,5 +1,13 @@
 import { supabase } from "@/lib/supabaseClient"
-import type { Account, AccountForm, Transaction, TransactionForm } from "@/types/AccountTypes"
+import type {
+  Account,
+  AccountForm,
+  Transaction,
+  TransactionForm,
+  TransactionWithAccount,
+  TransactionFilters,
+  PaginatedTransactions,
+} from "@/types/finance/account"
 
 export async function getAccounts(userId: string): Promise<Account[]> {
   const { data, error } = await supabase
@@ -20,6 +28,16 @@ export async function getAccount(id: string): Promise<Account | null> {
     .single()
   if (error) return null
   return data as Account
+}
+
+export async function getTransactionById(id: string): Promise<Transaction | null> {
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("*")
+    .eq("id", id)
+    .single()
+  if (error) return null
+  return data as Transaction
 }
 
 export async function createAccount(
@@ -71,32 +89,6 @@ export function getTotalBalance(accounts: Account[]): number {
   return accounts.reduce((sum, a) => sum + a.balance, 0)
 }
 
-export type TransactionWithAccount = Transaction & {
-  account:    Pick<Account, "name" | "color" | "icon" | "type">
-  to_account: Pick<Account, "name" | "color" | "icon" | "type"> | null
-  member?:    { full_name: string; avatar_url: string | null } | null
-  is_split?: boolean
-}
-
-export type TransactionFilters = {
-  type?:     "income" | "expense" | "transfer"
-  from?:     string
-  to?:       string
-  search?:   string
-  page?:     number
-  pageSize?: number
-  accountId?: string
-  category?:  string
-}
- 
-export type PaginatedTransactions = {
-  data:       TransactionWithAccount[]
-  total:      number
-  totalPages: number
-  page:       number
-  pageSize:   number
-}
- 
 export async function getTransactions(
   userId:  string,
   filters: TransactionFilters = {}

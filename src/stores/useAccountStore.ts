@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { supabase } from "@/lib/supabaseClient"
-import type { Account } from "@/types/AccountTypes"
+import type { Account } from "@/types"
 
 interface AccountState {
   accounts:     Account[]

@@ -2,16 +2,16 @@ import { useState, useEffect, useRef } from "react"
 import { useAuth } from "@/hooks/useAuth"
 import { useToast } from "@/hooks/useToast"
 import { useAccountStore } from "@/stores/useAccountStore"
+import type { TransactionWithAccount, TransactionFilters } from "@/types"
 import {
   getTransactions, deleteTransaction,
-  getMonthSummary, type TransactionWithAccount,
-  type TransactionFilters,
+  getMonthSummary,
 } from "@/services/AccountService"
 import {
   TRANSACTION_TYPE_ICONS, TRANSACTION_TYPE_COLORS,
   TRANSACTION_AMOUNT_COLORS, TRANSACTION_AMOUNT_PREFIX,
   ACCOUNT_TYPE_ICONS,
-} from "@/config/subscriber"
+} from "@/config/transactions"
 import { formatDate, currentMonthLabel } from "@/lib/utils"
 import SummaryCard from "@/components/customs/SummaryCard"
 import Pagination from "@/components/customs/Pagination"
