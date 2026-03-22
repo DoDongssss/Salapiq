@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "@/hooks/useAuth"
 import { useToast } from "@/hooks/useToast"
-import { unsettleSplit, getSplitSummary } from "@/services/splitService"
+import { unsettleSplit, getSplitSummary } from "@/services/SplitService"
 import type { ExpenseSplit, SplitSummary } from "@/types/SplitTypes"
 import SettleSplitModal from "@/components/modals/SettleSplitModal"
 import type { FamilyWithMembers } from "@/services/FamilyService"

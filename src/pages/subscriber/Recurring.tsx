@@ -16,7 +16,7 @@ import { TRANSACTION_CATEGORIES } from "@/types/AccountTypes"
 import SpinnerBtn from "@/components/customs/SpinnerBtn"
 import {
   Plus, Pencil, Trash2, X, RefreshCw,
-  TrendingUp, TrendingDown, Calendar, Bell,
+  TrendingUp, TrendingDown, Calendar,
   Building2, CreditCard, Smartphone, Wallet,
   type LucideIcon,
 } from "lucide-react"
@@ -33,7 +33,7 @@ const ACCOUNT_ICONS: Record<string, LucideIcon> = {
 }
 
 function ordinal(n: number) {
-  const s = ["th","st","nd","rd"]
+  const s = ["th", "st", "nd", "rd"]
   const v = n % 100
   return n + (s[(v - 20) % 10] || s[v] || s[0])
 }
@@ -44,12 +44,12 @@ export default function Recurring() {
 
   const accounts = useAccountStore((s) => s.accounts)
 
-  const [entries,    setEntries]    = useState<RecurringTransaction[]>([])
-  const [loading,    setLoading]    = useState(true)
-  const [showModal,  setShowModal]  = useState(false)
-  const [editEntry,  setEditEntry]  = useState<RecurringTransaction | null>(null)
-  const [deleting,   setDeleting]   = useState<string | null>(null)
-  const [toggling,   setToggling]   = useState<string | null>(null)
+  const [entries,   setEntries]   = useState<RecurringTransaction[]>([])
+  const [loading,   setLoading]   = useState(true)
+  const [showModal, setShowModal] = useState(false)
+  const [editEntry, setEditEntry] = useState<RecurringTransaction | null>(null)
+  const [deleting,  setDeleting]  = useState<string | null>(null)
+  const [toggling,  setToggling]  = useState<string | null>(null)
 
   const form = useForm<RecurringForm>({
     resolver: zodResolver(recurringSchema),
@@ -57,16 +57,15 @@ export default function Recurring() {
       account_id:    accounts[0]?.id ?? "",
       type:          "expense",
       amount:        0,
+      day_of_month:  1,
       category:      "",
       note:          "",
-      day_of_month:  1,
       is_active:     true,
       reminder_days: 3,
     },
   })
 
-  const watchType        = form.watch("type")
-  const watchReminderDays = form.watch("reminder_days")
+  const watchType = form.watch("type")
 
   useEffect(() => {
     if (!user) return
@@ -94,9 +93,9 @@ export default function Recurring() {
       account_id:    accounts[0]?.id ?? "",
       type:          "expense",
       amount:        0,
+      day_of_month:  1,
       category:      "",
       note:          "",
-      day_of_month:  1,
       is_active:     true,
       reminder_days: 3,
     })
@@ -109,9 +108,9 @@ export default function Recurring() {
       account_id:    entry.account_id,
       type:          entry.type,
       amount:        entry.amount,
-      category:      entry.category    ?? "",
-      note:          entry.note        ?? "",
       day_of_month:  entry.day_of_month,
+      category:      entry.category ?? "",
+      note:          entry.note     ?? "",
       is_active:     entry.is_active,
       reminder_days: entry.reminder_days ?? 3,
     })
@@ -178,18 +177,20 @@ export default function Recurring() {
             Automated income and expense entries
           </p>
         </div>
-        <Button onClick={openCreate} className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-4">
+        <Button
+          onClick={openCreate}
+          className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-4"
+        >
           <Plus size={13} /> Add recurring
         </Button>
       </div>
 
-      {/* Info banner */}
       <div className="flex items-start gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 mb-6">
         <RefreshCw size={14} className="text-emerald-600 shrink-0 mt-0.5" />
         <div>
           <p className="text-[13px] font-medium text-emerald-800">Runs automatically every day at midnight</p>
           <p className="mono text-[10px] text-emerald-600 mt-0.5">
-            Each entry fires once per month on the configured day. Bill reminders are sent in advance based on your reminder setting.
+            Each entry fires once per month on the configured day. Max day is 28 to ensure all months are covered.
           </p>
         </div>
       </div>
@@ -207,7 +208,10 @@ export default function Recurring() {
           <p className="mono text-[11px] text-stone-400 mt-1 mb-5">
             Set up your salary, rent, subscriptions and more
           </p>
-          <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-4">
+          <Button
+            onClick={openCreate}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-4"
+          >
             <Plus size={13} className="mr-1" /> Add your first entry
           </Button>
         </div>
@@ -242,18 +246,20 @@ export default function Recurring() {
         </div>
       )}
 
-      {/* Modal */}
       {showModal && (
         <div
           className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
           onClick={(e) => e.target === e.currentTarget && setShowModal(false)}
         >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-y-auto max-h-[90vh]">
             <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-stone-100">
               <h2 className="text-[15px] font-semibold text-stone-900">
                 {editEntry ? "Edit recurring" : "Add recurring entry"}
               </h2>
-              <button onClick={() => setShowModal(false)} className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-50">
+              <button
+                onClick={() => setShowModal(false)}
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-50"
+              >
                 <X size={14} />
               </button>
             </div>
@@ -295,9 +301,11 @@ export default function Recurring() {
                       <option key={a.id} value={a.id}>{a.name}</option>
                     ))}
                   </select>
-                  <Chevron />
+                  <SelectChevron />
                 </div>
-                {form.formState.errors.account_id && <Err msg={form.formState.errors.account_id.message!} />}
+                {form.formState.errors.account_id && (
+                  <ErrMsg msg={form.formState.errors.account_id.message!} />
+                )}
               </div>
 
               {/* Amount */}
@@ -309,17 +317,22 @@ export default function Recurring() {
                     type="number"
                     step="0.01"
                     placeholder="0.00"
-                    className={cn("h-10 text-sm bg-stone-50 border-stone-200 pl-7 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20", form.formState.errors.amount && "border-red-300")}
+                    className={cn(
+                      "h-10 text-sm bg-stone-50 border-stone-200 pl-7 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20",
+                      form.formState.errors.amount && "border-red-300"
+                    )}
                     {...form.register("amount", { valueAsNumber: true })}
                   />
                 </div>
-                {form.formState.errors.amount && <Err msg={form.formState.errors.amount.message!} />}
+                {form.formState.errors.amount && (
+                  <ErrMsg msg={form.formState.errors.amount.message!} />
+                )}
               </div>
 
               {/* Day of month */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">
-                  Day of month <span className="text-stone-300 normal-case">(runs on this day every month)</span>
+                  Day of month
                 </Label>
                 <div className="relative">
                   <select
@@ -330,16 +343,15 @@ export default function Recurring() {
                       <option key={value} value={value}>{label}</option>
                     ))}
                   </select>
-                  <Chevron />
+                  <SelectChevron />
                 </div>
-                {form.formState.errors.day_of_month && <Err msg={form.formState.errors.day_of_month.message!} />}
+                <p className="mono text-[10px] text-stone-400">Runs on this day every month</p>
               </div>
 
               {/* Reminder days */}
               <div className="flex flex-col gap-1.5">
-                <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400 flex items-center gap-1">
-                  <Bell size={10} /> Remind me
-                  <span className="text-stone-300 normal-case font-normal">(days before due)</span>
+                <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">
+                  Reminder days before
                 </Label>
                 <div className="flex gap-2">
                   {[1, 2, 3, 5, 7].map((d) => (
@@ -348,9 +360,9 @@ export default function Recurring() {
                       type="button"
                       onClick={() => form.setValue("reminder_days", d)}
                       className={cn(
-                        "flex-1 h-9 rounded-xl mono text-[11px] border transition-all",
-                        watchReminderDays === d
-                          ? "bg-emerald-50 border-emerald-300 text-emerald-700"
+                        "flex-1 h-9 mono text-[11px] rounded-xl border transition-all",
+                        form.watch("reminder_days") === d
+                          ? "bg-emerald-50 border-emerald-400 text-emerald-700"
                           : "bg-stone-50 border-stone-200 text-stone-500 hover:border-stone-300"
                       )}
                     >
@@ -363,7 +375,7 @@ export default function Recurring() {
               {/* Category */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">
-                  Category <span className="text-stone-300 normal-case">(optional)</span>
+                  Category <span className="text-stone-300 normal-case font-normal">(optional)</span>
                 </Label>
                 <div className="relative">
                   <select
@@ -375,24 +387,29 @@ export default function Recurring() {
                       <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
-                  <Chevron />
+                  <SelectChevron />
                 </div>
               </div>
 
               {/* Note */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">
-                  Name <span className="text-stone-300 normal-case">(e.g. Meralco, Netflix, Salary)</span>
+                  Note <span className="text-stone-300 normal-case font-normal">(e.g. Salary, Netflix)</span>
                 </Label>
                 <Input
-                  placeholder="e.g. Meralco Bill, Netflix, Monthly Salary"
+                  placeholder="e.g. Monthly salary"
                   className="h-10 text-sm bg-stone-50 border-stone-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20"
                   {...form.register("note")}
                 />
               </div>
 
               <div className="flex gap-2 justify-end pt-2">
-                <Button type="button" variant="outline" onClick={() => setShowModal(false)} className="text-[12px] h-9 border-stone-200 text-stone-600">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowModal(false)}
+                  className="text-[12px] h-9 border-stone-200 text-stone-600"
+                >
                   Cancel
                 </Button>
                 <Button
@@ -437,17 +454,32 @@ function EntryGroup({
       <div className="flex items-center gap-2 mb-3">
         <Icon size={13} className={color} />
         <p className="text-[12px] font-semibold text-stone-600 uppercase tracking-[0.08em] mono">{label}</p>
-        <span className="mono text-[10px] text-stone-400">{entries.length} entr{entries.length !== 1 ? "ies" : "y"}</span>
+        <span className="mono text-[10px] text-stone-400">
+          {entries.length} entr{entries.length !== 1 ? "ies" : "y"}
+        </span>
       </div>
       <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] overflow-hidden">
         {entries.map((e) => {
           const AccIcon  = ACCOUNT_ICONS[e.account?.type ?? "cash"] ?? Wallet
           const isIncome = e.type === "income"
           return (
-            <div key={e.id} className={cn("flex items-center gap-3 px-5 py-4 border-b border-stone-50 last:border-0 transition-colors", !e.is_active && "opacity-50")}>
-              <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", isIncome ? "bg-emerald-50" : "bg-red-50")}>
-                {isIncome ? <TrendingUp size={15} className="text-emerald-600" /> : <TrendingDown size={15} className="text-red-500" />}
+            <div
+              key={e.id}
+              className={cn(
+                "flex items-center gap-3 px-5 py-4 border-b border-stone-50 last:border-0 transition-colors",
+                !e.is_active && "opacity-50"
+              )}
+            >
+              <div className={cn(
+                "w-9 h-9 rounded-xl flex items-center justify-center shrink-0",
+                isIncome ? "bg-emerald-50" : "bg-red-50"
+              )}>
+                {isIncome
+                  ? <TrendingUp size={15} className="text-emerald-600" />
+                  : <TrendingDown size={15} className="text-red-500" />
+                }
               </div>
+
               <div className="flex-1 min-w-0">
                 <p className="text-[13px] font-medium text-stone-800 truncate">
                   {e.note ?? e.category ?? (isIncome ? "Income" : "Expense")}
@@ -458,9 +490,6 @@ function EntryGroup({
                   <span className="text-stone-200">·</span>
                   <Calendar size={9} className="text-stone-400" />
                   <p className="mono text-[10px] text-stone-400">Every {ordinal(e.day_of_month)}</p>
-                  <span className="text-stone-200">·</span>
-                  <Bell size={9} className="text-stone-400" />
-                  <p className="mono text-[10px] text-stone-400">{e.reminder_days ?? 3}d before</p>
                   {e.last_run_at && (
                     <>
                       <span className="text-stone-200">·</span>
@@ -471,9 +500,14 @@ function EntryGroup({
                   )}
                 </div>
               </div>
-              <p className={cn("mono text-[13px] font-semibold shrink-0", isIncome ? "text-emerald-600" : "text-red-500")}>
+
+              <p className={cn(
+                "mono text-[13px] font-semibold shrink-0",
+                isIncome ? "text-emerald-600" : "text-red-500"
+              )}>
                 {isIncome ? "+" : "−"}₱{e.amount.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
               </p>
+
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   onClick={() => onToggle(e)}
@@ -487,10 +521,17 @@ function EntryGroup({
                 >
                   {toggling === e.id ? "..." : e.is_active ? "Pause" : "Resume"}
                 </button>
-                <button onClick={() => onEdit(e)} className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-300 hover:text-emerald-500 hover:bg-emerald-50 transition-colors">
+                <button
+                  onClick={() => onEdit(e)}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-300 hover:text-emerald-500 hover:bg-emerald-50 transition-colors"
+                >
                   <Pencil size={12} />
                 </button>
-                <button onClick={() => onDelete(e.id)} disabled={deleting === e.id} className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:opacity-40">
+                <button
+                  onClick={() => onDelete(e.id)}
+                  disabled={deleting === e.id}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors disabled:opacity-40"
+                >
                   <Trash2 size={12} />
                 </button>
               </div>
@@ -502,7 +543,7 @@ function EntryGroup({
   )
 }
 
-function Chevron() {
+function SelectChevron() {
   return (
     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none">
       <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
@@ -512,6 +553,6 @@ function Chevron() {
   )
 }
 
-function Err({ msg }: { msg: string }) {
+function ErrMsg({ msg }: { msg: string }) {
   return <p className="mono text-[10px] text-red-400">— {msg}</p>
 }
