@@ -30,6 +30,16 @@ export async function getAccount(id: string): Promise<Account | null> {
   return data as Account
 }
 
+export async function getTransactionById(id: string): Promise<Transaction | null> {
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("*")
+    .eq("id", id)
+    .single()
+  if (error) return null
+  return data as Transaction
+}
+
 export async function createAccount(
   userId: string,
   payload: AccountForm,

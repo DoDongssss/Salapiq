@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabaseClient"
+import { createTransaction, getAccount, getTransactionById } from "@/services/AccountService"
 import type { ExpenseSplit, SplitSummary } from "@/types"
 
 export async function createSplits(
@@ -23,10 +24,12 @@ export async function createSplits(
 
   if (error) return error.message
 
-  await supabase
+  const { error: txnErr } = await supabase
     .from("transactions")
     .update({ is_split: true })
     .eq("id", transactionId)
+
+  if (txnErr) return txnErr.message
 
   const totalAmount = splits.reduce((sum, s) => sum + s.amount, 0)
   await supabase
@@ -66,6 +69,18 @@ export async function getFamilySplits(
 }
 
 
+export async function getTransactionIdsWithSplits(
+  transactionIds: string[]
+): Promise<Set<string>> {
+  if (transactionIds.length === 0) return new Set()
+  const { data, error } = await supabase
+    .from("expense_splits")
+    .select("transaction_id")
+    .in("transaction_id", transactionIds)
+  if (error || !data?.length) return new Set()
+  return new Set(data.map((r) => r.transaction_id as string))
+}
+
 export async function getTransactionSplits(
   transactionId: string
 ): Promise<ExpenseSplit[]> {
@@ -92,6 +107,71 @@ export async function settleSplit(id: string): Promise<string | null> {
     .eq("id", id)
 
   return error ? error.message : null
+}
+
+export async function settleExpenseSplitPayment(
+  splitId: string,
+  payerUserId: string,
+  fromAccountId: string
+): Promise<string | null> {
+  const { data: split, error: splitErr } = await supabase
+    .from("expense_splits")
+    .select("*")
+    .eq("id", splitId)
+    .single()
+
+  if (splitErr || !split) return "Split not found."
+  if (split.owed_by !== payerUserId) return "Only the member who owes this amount can settle it."
+  if (split.is_settled) return "This split is already settled."
+
+  const origTx = await getTransactionById(split.transaction_id)
+  if (!origTx) return "Original expense could not be found."
+
+  const recipientAccountId = origTx.account_id
+  if (fromAccountId === recipientAccountId) {
+    return "Choose a different account than the one that paid the original expense."
+  }
+
+  const fromAccount = await getAccount(fromAccountId)
+  if (!fromAccount || fromAccount.user_id !== payerUserId) {
+    return "Invalid payer account."
+  }
+  if (fromAccount.family_id !== split.family_id) {
+    return "Pay from a shared family account."
+  }
+
+  const toAccount = await getAccount(recipientAccountId)
+  if (!toAccount) {
+    return "The account used for the original expense could not be found."
+  }
+
+  const today = new Date().toISOString().split("T")[0]
+  const label = origTx.note ?? split.note ?? "Shared expense"
+
+  const { error: txnErr } = await createTransaction(payerUserId, {
+    account_id:    fromAccountId,
+    type:          "transfer",
+    amount:        split.amount,
+    category:      "Split settlement",
+    note:          `Split settlement · ${label}`,
+    date:          today,
+    to_account_id: recipientAccountId,
+  })
+
+  if (txnErr) return txnErr
+
+  const settleErr = await settleSplit(splitId)
+  if (settleErr) return settleErr
+
+  await supabase.from("notifications").insert({
+    user_id: split.created_by,
+    title:   "Split payment received",
+    message: `₱${split.amount.toLocaleString("en-PH", { minimumFractionDigits: 2 })} received toward "${label}".`,
+    type:    "info",
+    meta:    { split_id: splitId, transaction_id: split.transaction_id },
+  })
+
+  return null
 }
 
 

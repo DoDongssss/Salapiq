@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "@/hooks/useAuth"
-import { useToast } from "@/hooks/useToast"
-import { unsettleSplit, getSplitSummary } from "@/services/SplitService"
+import { getSplitSummary } from "@/services/SplitService"
 import type { ExpenseSplit, SplitSummary } from "@/types"
 import SettleSplitModal from "@/components/modals/SettleSplitModal"
 import type { FamilyWithMembers } from "@/services/FamilyService"
@@ -16,12 +15,10 @@ type ActiveTab = "pending" | "settled"
 
 export default function FamilySplits({ family }: Props) {
   const { user }  = useAuth()
-  const { toast } = useToast()
 
   const [summary,   setSummary]   = useState<SplitSummary | null>(null)
   const [loading,   setLoading]   = useState(true)
   const [activeTab, setActiveTab] = useState<ActiveTab>("pending")
-  const [settling,      setSettling]      = useState<string | null>(null)
   const [settlingModal, setSettlingModal]  = useState<ExpenseSplit | null>(null)
 
   useEffect(() => {
@@ -44,22 +41,6 @@ export default function FamilySplits({ family }: Props) {
     if (!user) return
     const data = await getSplitSummary(family.id, user.id)
     setSummary(data)
-  }
-
-  const handleSettle = async (split: ExpenseSplit) => {
-    if (!split.is_settled) {
-      setSettlingModal(split)
-      return
-    }
-    setSettling(split.id)
-    const error = await unsettleSplit(split.id)
-    setSettling(null)
-    if (error) {
-      toast({ type: "error", title: "Failed", description: error })
-    } else {
-      toast({ type: "info", title: "Marked as unsettled" })
-      reload()
-    }
   }
 
   const displayed = activeTab === "pending"
@@ -151,7 +132,8 @@ export default function FamilySplits({ family }: Props) {
           {displayed.map((split, i) => {
             const iOwe      = split.owed_by === user?.id && split.created_by !== user?.id
             const owesMe    = split.created_by === user?.id && split.owed_by !== user?.id
-            const isSettling = settling === split.id
+            const debtorName = split.owed_by_profile?.full_name ?? "Member"
+            const canSettle = !split.is_settled && split.owed_by === user?.id
 
             return (
               <div
@@ -189,7 +171,7 @@ export default function FamilySplits({ family }: Props) {
                       {iOwe
                         ? `You owe ${family.members.find(m => m.user_id === split.created_by)?.profile?.full_name ?? "someone"}`
                         : owesMe
-                        ? `${split.owed_by_profile?.full_name ?? "Member"} owes you`
+                        ? `${debtorName} owes you`
                         : split.owed_by_profile?.full_name
                       }
                     </p>
@@ -211,19 +193,28 @@ export default function FamilySplits({ family }: Props) {
                   {iOwe ? "−" : owesMe ? "+" : ""}₱{split.amount.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
                 </p>
 
-                <Button
-                  onClick={() => handleSettle(split)}
-                  disabled={isSettling}
-                  variant="outline"
-                  className={cn(
-                    "shrink-0 h-8 px-3 mono text-[10px] transition-colors",
-                    split.is_settled
-                      ? "border-stone-200 text-stone-400 hover:border-amber-300 hover:text-amber-600"
-                      : "border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                <div className="shrink-0 w-[120px] flex justify-end">
+                  {!split.is_settled && (
+                    canSettle ? (
+                      <Button
+                        onClick={() => setSettlingModal(split)}
+                        variant="outline"
+                        className="h-8 px-3 mono text-[10px] border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                      >
+                        Settle
+                      </Button>
+                    ) : owesMe ? (
+                      <span className="mono text-[9px] text-stone-400 text-right leading-tight">
+                        Waiting for<br />{debtorName.split(" ")[0]}
+                      </span>
+                    ) : (
+                      <span className="mono text-[9px] text-stone-400">—</span>
+                    )
                   )}
-                >
-                  {isSettling ? "..." : split.is_settled ? "Unsettle" : "Settle"}
-                </Button>
+                  {split.is_settled && (
+                    <span className="mono text-[9px] text-emerald-600 font-medium">Settled</span>
+                  )}
+                </div>
               </div>
             )
           })}

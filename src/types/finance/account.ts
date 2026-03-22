@@ -30,6 +30,7 @@ export type Transaction = {
   ai_category:    string | null
   ai_confidence:  number | null
   ai_classified:  boolean
+  is_split?:      boolean
   receipt_url:    string | null
   created_at:     string
   updated_at:     string
@@ -39,7 +40,6 @@ export type TransactionWithAccount = Transaction & {
   account:    Pick<Account, "name" | "color" | "icon" | "type">
   to_account: Pick<Account, "name" | "color" | "icon" | "type"> | null
   member?:    { full_name: string; avatar_url: string | null } | null
-  is_split?: boolean
 }
 
 export type TransactionFilters = {
