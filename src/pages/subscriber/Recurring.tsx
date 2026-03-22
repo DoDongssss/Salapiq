@@ -123,10 +123,11 @@ export default function Recurring() {
   }
 
   // ✅ onSubmit uses the OUTPUT type (defaults resolved)
-  const onSubmit = async (data: RecurringFormOutput) => {
+  const onSubmit = async (data: RecurringFormInput) => {
+    const payload = data as RecurringFormOutput
     if (!user) return
     if (editEntry) {
-      const error = await updateRecurring(editEntry.id, data)
+      const error = await updateRecurring(editEntry.id, payload)
       if (error) {
         toast({ type: "error", title: "Update failed", description: error })
       } else {
@@ -135,7 +136,7 @@ export default function Recurring() {
         reload()
       }
     } else {
-      const { error } = await createRecurring(user.id, data)
+      const { error } = await createRecurring(user.id, payload)
       if (error) {
         toast({ type: "error", title: "Failed to create", description: error })
       } else {
