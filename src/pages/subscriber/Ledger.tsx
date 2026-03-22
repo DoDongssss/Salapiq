@@ -2,15 +2,14 @@ import { useState, useEffect, useRef } from "react"
 import { useAuth } from "@/hooks/useAuth"
 import { useToast } from "@/hooks/useToast"
 import { useAccountStore } from "@/stores/useAccountStore"
+import { useFamilyStore }  from "@/stores/useFamilyStore"
 import {
   type Account, TRANSACTION_CATEGORIES,
 } from "@/types/AccountTypes"
 import {
   getTransactions, deleteTransaction, getMonthSummary, getTotalBalance,
-  type TransactionWithAccount, type TransactionFilters,
-} from "@/services/AccountService"
-import {
   deleteAccount,
+  type TransactionWithAccount, type TransactionFilters,
 } from "@/services/AccountService"
 import {
   TRANSACTION_TYPE_ICONS, TRANSACTION_TYPE_COLORS,
@@ -20,14 +19,16 @@ import {
   type DatePreset as Date_Preset, type TypeFilter as Type_Filter,
 } from "@/config/subscriber"
 import { formatDate, currentMonthLabel } from "@/lib/utils"
-import SummaryCard           from "@/components/customs/SummaryCard"
-import Pagination            from "@/components/customs/Pagination"
-import AddAccountModal       from "@/components/modals/AddAccountModal"
-import EditTransactionModal  from "@/components/modals/EditTransactionModal"
+import SummaryCard          from "@/components/customs/SummaryCard"
+import Pagination           from "@/components/customs/Pagination"
+import AddAccountModal      from "@/components/modals/AddAccountModal"
+import TransactionModal     from "@/components/modals/TransactionModal"
+import SplitModal           from "@/components/modals/SplitModal"
 import {
   Wallet, Building2, CreditCard, Smartphone,
   MoreHorizontal, Pencil, Trash2, X, Plus,
   TrendingDown, Search, SlidersHorizontal,
+  SplitSquareHorizontal,
   type LucideIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -53,13 +54,13 @@ const ACCOUNT_TYPE_LABELS: Record<string, string> = {
 }
 
 function buildFilters(
-  page: number,
+  page:            number,
   debouncedSearch: string,
-  typeFilter: TypeFilter,
-  categoryFilter: string,
-  datePreset: DatePreset,
-  customFrom: string,
-  customTo: string,
+  typeFilter:      TypeFilter,
+  categoryFilter:  string,
+  datePreset:      DatePreset,
+  customFrom:      string,
+  customTo:        string,
   selectedAccount: string | null
 ): TransactionFilters {
   const now   = new Date()
@@ -94,7 +95,6 @@ function buildFilters(
   }
 }
 
-
 export default function Ledger() {
   const { user }  = useAuth()
   const { toast } = useToast()
@@ -103,12 +103,17 @@ export default function Ledger() {
   const accountsLoading = useAccountStore((s) => s.loading)
   const refreshAccounts = useAccountStore((s) => s.refresh)
   const lastAdded       = useAccountStore((s) => s.lastAdded)
+  const family          = useFamilyStore((s) => s.family)
+  const familyAccountIds = new Set(
+    accounts.filter((a) => a.family_id === family?.id).map((a) => a.id)
+  )
 
   const [transactions, setTransactions] = useState<TransactionWithAccount[]>([])
   const [total,        setTotal]        = useState(0)
   const [totalPages,   setTotalPages]   = useState(1)
   const [txnLoading,   setTxnLoading]   = useState(true)
   const [summary,      setSummary]      = useState({ income: 0, expenses: 0, net: 0 })
+  const [splitTxnIds, setSplitTxnIds] = useState<Set<string>>(new Set())
 
   const [selectedAccount,  setSelectedAccount]  = useState<string | null>(null)
   const [page,             setPage]             = useState(1)
@@ -123,6 +128,7 @@ export default function Ledger() {
   const [accountModalOpen, setAccountModalOpen] = useState(false)
   const [editingAccount,   setEditingAccount]   = useState<Account | null>(null)
   const [editingTxn,       setEditingTxn]       = useState<TransactionWithAccount | null>(null)
+  const [splittingTxn,     setSplittingTxn]     = useState<TransactionWithAccount | null>(null)
   const [menuOpen,         setMenuOpen]         = useState<string | null>(null)
   const [deleting,         setDeleting]         = useState<string | null>(null)
 
@@ -364,7 +370,6 @@ export default function Ledger() {
       <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-4 mb-4">
         <div className="flex items-center gap-3 flex-wrap">
 
-          {/* Search */}
           <div className="relative flex-1 min-w-[180px]">
             <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
             <input
@@ -381,7 +386,6 @@ export default function Ledger() {
             )}
           </div>
 
-          {/* Date preset */}
           <div className="relative">
             <select
               value={datePreset}
@@ -397,7 +401,6 @@ export default function Ledger() {
             </span>
           </div>
 
-          {/* Custom date range */}
           {datePreset === "custom" && (
             <div className="flex items-center gap-2">
               <input
@@ -416,7 +419,6 @@ export default function Ledger() {
             </div>
           )}
 
-          {/* Type filter */}
           <div className="relative">
             <select
               value={typeFilter}
@@ -432,7 +434,6 @@ export default function Ledger() {
             </span>
           </div>
 
-          {/* Category filter */}
           <div className="relative">
             <select
               value={categoryFilter}
@@ -449,7 +450,6 @@ export default function Ledger() {
             </span>
           </div>
 
-          {/* Reset */}
           {hasActiveFilters && (
             <button
               onClick={handleReset}
@@ -500,8 +500,8 @@ export default function Ledger() {
                   <p className="mono text-[10px] text-stone-300">{txns.length} item{txns.length !== 1 ? "s" : ""}</p>
                 </div>
                 {txns.map((t) => {
-                  const Icon    = TRANSACTION_TYPE_ICONS[t.type]
-                  const AccIcon = ACCOUNT_TYPE_ICONS[t.account?.type ?? "cash"]
+                  const Icon       = TRANSACTION_TYPE_ICONS[t.type]
+                  const AccIcon    = ACCOUNT_TYPE_ICONS[t.account?.type ?? "cash"]
                   const isTransfer = t.type === "transfer"
                   return (
                     <div
@@ -547,15 +547,31 @@ export default function Ledger() {
                         <button
                           onClick={() => setEditingTxn(t)}
                           className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-300 hover:text-emerald-500 hover:bg-emerald-50 transition-colors"
+                          title="Edit"
                         >
                           <Pencil size={12} />
                         </button>
                         <button
                           onClick={() => handleDeleteTxn(t.id)}
                           className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-300 hover:text-red-400 hover:bg-red-50 transition-colors"
+                          title="Delete"
                         >
                           <Trash2 size={12} />
                         </button>
+                          {family &&
+                          t.type === "expense" &&
+                          t.is_split !== true &&
+                          !splitTxnIds.has(t.id) &&
+                          familyAccountIds.has(t.account_id) &&
+                          family.members.find((m) => m.user_id === user?.id)?.role === "admin" && (
+                            <button
+                              onClick={() => setSplittingTxn(t)}
+                              className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-300 hover:text-sky-500 hover:bg-sky-50 transition-colors"
+                              title="Split expense"
+                            >
+                              <SplitSquareHorizontal size={12} />
+                            </button>
+                        )}
                       </div>
                     </div>
                   )
@@ -582,11 +598,24 @@ export default function Ledger() {
       )}
 
       {editingTxn && (
-        <EditTransactionModal
+        <TransactionModal
+          open={!!editingTxn}
           transaction={editingTxn}
-          accounts={accounts}
           onClose={() => setEditingTxn(null)}
-          onUpdated={reloadTxns}
+          onDone={reloadTxns}
+        />
+      )}
+
+      {splittingTxn && (
+        <SplitModal
+          transactionId={splittingTxn.id}
+          totalAmount={splittingTxn.amount}
+          onClose={() => setSplittingTxn(null)}
+          onSplit={() => {
+            setSplitTxnIds((prev) => new Set([...prev, splittingTxn.id]))
+            setSplittingTxn(null)
+            reloadTxns()
+          }}
         />
       )}
     </div>

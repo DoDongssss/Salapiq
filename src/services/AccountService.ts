@@ -75,6 +75,7 @@ export type TransactionWithAccount = Transaction & {
   account:    Pick<Account, "name" | "color" | "icon" | "type">
   to_account: Pick<Account, "name" | "color" | "icon" | "type"> | null
   member?:    { full_name: string; avatar_url: string | null } | null
+  is_split?: boolean
 }
 
 export type TransactionFilters = {

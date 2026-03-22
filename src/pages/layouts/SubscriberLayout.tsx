@@ -29,9 +29,9 @@ const NAV_ITEMS = [
   { icon: ListChecks,      label: "Ledger",       path: "/app/ledger"    },
   { icon: Target,          label: "Budget",       path: "/app/budget"       },
   { icon: PiggyBank,       label: "Savings",      path: "/app/savings"      },
-  { icon: RefreshCw, label: "Recurring", path: "/app/recurring" },
+  { icon: RefreshCw,       label: "Recurring",    path: "/app/recurring" },
   { icon: Users,           label: "Family",       path: "/app/family"       },
-  { icon: Sparkles,        label: "AI Classify",  path: "/app/classify"     },
+  { icon: Sparkles,        label: "Classify",     path: "/app/ai-classify"     },
   { icon: Settings,        label: "Settings",     path: "/app/settings"     },
 ]
 
