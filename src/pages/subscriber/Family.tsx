@@ -16,6 +16,7 @@ import {
 import { getAccounts } from "@/services/AccountService"
 import type { TransactionWithAccount } from "@/services/AccountService"
 import Avatar from "@/components/customs/Avatar"
+import FamilySplit from "@/pages/subscriber/FamilySplit"
 import Pagination from "@/components/customs/Pagination"
 import CreateFamilyModal from "@/components/modals/CreateFamilyModal"
 import JoinFamilyModal from "@/components/modals/JoinFamilyModal"
@@ -25,7 +26,7 @@ import {
   Crown, UserMinus, ChevronRight, X,
   TrendingUp, TrendingDown,
   Building2, CreditCard, Smartphone,
-  Search, SlidersHorizontal,
+  Search, SlidersHorizontal, SplitSquareHorizontal,
   type LucideIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -46,6 +47,7 @@ const NAV = [
   { to: "/app/family/members",      icon: Users,          label: "Members",      end: false },
   { to: "/app/family/accounts",     icon: Wallet,         label: "Accounts",     end: false },
   { to: "/app/family/transactions", icon: ArrowLeftRight, label: "Transactions", end: false },
+  { to: "/app/family/splits", icon: SplitSquareHorizontal, label: "Splits", end: false },
 ]
 
 type TypeFilter = "all" | "income" | "expense" | "transfer"
@@ -169,6 +171,7 @@ export default function Family() {
         <Route path="members"      element={<FamilyMembers      family={family!} myRole={myRole} onReload={reload} />} />
         <Route path="accounts"     element={<FamilyAccounts     family={family!} />} />
         <Route path="transactions" element={<FamilyTransactions family={family!} />} />
+        <Route path="splits"       element={<FamilySplit family={family!} />} />
       </Routes>
     </div>
   )

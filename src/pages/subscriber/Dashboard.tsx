@@ -13,38 +13,15 @@ import { STATUS_COLORS }        from "@/config/subscriber"
 import {
   TrendingUp, TrendingDown, ArrowLeftRight,
   Wallet, Users, PiggyBank, Sparkles,
-  ChevronRight, AlertTriangle, Lightbulb,
+  ChevronRight,
   Target, Building2, CreditCard, Smartphone,
   ArrowUpRight, ArrowDownRight, CircleDollarSign,
 } from "lucide-react"
+import { useInsights } from "@/hooks/useInsights"
 import { cn } from "@/lib/utils"
 
 const CURRENT_MONTH = new Date().toLocaleString("en-PH", { month: "long" })
 const CURRENT_YEAR  = new Date().getFullYear()
-
-const AI_INSIGHTS = [
-  {
-    id:    1,
-    icon:  AlertTriangle,
-    color: "text-amber-500 bg-amber-50 border-amber-200",
-    title: "Food spending up 32%",
-    desc:  "₱4,200 spent this month — 32% above your average.",
-  },
-  {
-    id:    2,
-    icon:  Lightbulb,
-    color: "text-sky-500 bg-sky-50 border-sky-200",
-    title: "Best saving day: Tuesday",
-    desc:  "You spend the least on Tuesdays. Schedule transfers then.",
-  },
-  {
-    id:    3,
-    icon:  Target,
-    color: "text-emerald-600 bg-emerald-50 border-emerald-200",
-    title: "Emergency Fund on track",
-    desc:  "At this pace, goal reached 3 weeks early. Keep going!",
-  },
-]
 
 const ACCOUNT_ICONS: Record<string, typeof Wallet> = {
   bank:    Building2,
@@ -90,6 +67,8 @@ export default function Dashboard() {
   const budgets       = useBudgetStore((s) => s.budgets)
   const budgetLoading = useBudgetStore((s) => s.loading)
   const budgetOv      = useBudgetStore((s) => s.overview)
+
+  const insights = useInsights()
 
   const balance     = totalBalance()
   const ov          = savingsOv()
@@ -200,10 +179,8 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-3 gap-5">
 
-        {/* Left + centre */}
         <div className="col-span-2 flex flex-col gap-5">
 
-          {/* Budget */}
           <Section
             title="Budget"
             sub={
@@ -282,7 +259,6 @@ export default function Dashboard() {
             )}
           </Section>
 
-          {/* Accounts */}
           <Section
             title="Accounts"
             sub={`₱${balance.toLocaleString("en-PH", { minimumFractionDigits: 2 })} total`}
@@ -322,7 +298,6 @@ export default function Dashboard() {
             )}
           </Section>
 
-          {/* Savings */}
           <Section
             title="Savings goals"
             sub={goals.length > 0 ? `${ov.totalPercent}% overall · ₱${ov.totalSaved.toLocaleString()} saved` : undefined}
@@ -370,7 +345,6 @@ export default function Dashboard() {
             )}
           </Section>
 
-          {/* Family */}
           {family && (
             <Section
               title="Family"
@@ -406,10 +380,8 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Right column */}
         <div className="flex flex-col gap-5">
 
-          {/* AI Insights */}
           <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] overflow-hidden">
             <div className="flex items-center gap-2.5 px-5 py-4 border-b border-stone-50">
               <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-violet-100 to-violet-200 flex items-center justify-center">
@@ -422,7 +394,7 @@ export default function Dashboard() {
               <span className="mono text-[9px] bg-violet-50 text-violet-600 border border-violet-200 px-1.5 py-0.5 rounded-full">Beta</span>
             </div>
             <div className="divide-y divide-stone-50">
-              {AI_INSIGHTS.map((insight) => {
+              {insights.map((insight) => {
                 const Icon = insight.icon
                 return (
                   <div key={insight.id} className="px-5 py-4 hover:bg-stone-50/60 transition-colors">
@@ -440,13 +412,12 @@ export default function Dashboard() {
               })}
             </div>
             <div className="px-5 py-3 border-t border-stone-50">
-              <button onClick={() => navigate("/app/classify")} className="w-full mono text-[10px] text-stone-400 hover:text-violet-600 transition-colors flex items-center justify-center gap-1.5">
+              <button onClick={() => navigate("/app/ai-classify")} className="w-full mono text-[10px] text-stone-400 hover:text-violet-600 transition-colors flex items-center justify-center gap-1.5">
                 <Sparkles size={10} /> Open AI Classify <ChevronRight size={10} />
               </button>
             </div>
           </div>
 
-          {/* Top spending */}
           {topBudgets.length > 0 && (
             <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-5">
               <p className="text-[13px] font-semibold text-stone-900 mb-4">Top spending</p>
@@ -477,7 +448,6 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Alerts */}
           {recentNotifs.length > 0 && (
             <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-stone-50">
@@ -497,7 +467,6 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Transactions shortcut */}
           <button
             onClick={() => navigate("/app/transactions")}
             className="w-full bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-5 flex items-center justify-between hover:border-emerald-300 hover:shadow-[0_4px_24px_rgba(16,185,129,0.08)] transition-all group"

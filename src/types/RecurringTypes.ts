@@ -10,6 +10,7 @@ export type RecurringTransaction = {
   note:         string | null
   day_of_month: number
   is_active:    boolean
+  reminder_days: number
   last_run_at:  string | null
   created_at:   string
   updated_at:   string
@@ -23,7 +24,8 @@ export const recurringSchema = z.object({
   day_of_month: z.number().min(1).max(28),
   category:     z.string().optional(),
   note:         z.string().optional(),
-  is_active:    z.boolean(),             
+  is_active:    z.boolean(),
+  reminder_days: z.number().min(1).max(7).default(3),
 })
 
 export type RecurringForm = {
@@ -33,7 +35,8 @@ export type RecurringForm = {
   day_of_month: number
   category?:    string
   note?:        string
-  is_active:    boolean
+  is_active:     boolean
+  reminder_days: number
 }
 
 export const DAY_OPTIONS = Array.from({ length: 28 }, (_, i) => ({

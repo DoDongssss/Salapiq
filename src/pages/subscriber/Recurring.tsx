@@ -16,7 +16,7 @@ import { TRANSACTION_CATEGORIES } from "@/types/AccountTypes"
 import SpinnerBtn from "@/components/customs/SpinnerBtn"
 import {
   Plus, Pencil, Trash2, X, RefreshCw,
-  TrendingUp, TrendingDown, Calendar,
+  TrendingUp, TrendingDown, Calendar, Bell,
   Building2, CreditCard, Smartphone, Wallet,
   type LucideIcon,
 } from "lucide-react"
@@ -54,17 +54,19 @@ export default function Recurring() {
   const form = useForm<RecurringForm>({
     resolver: zodResolver(recurringSchema),
     defaultValues: {
-      account_id:   accounts[0]?.id ?? "",
-      type:         "expense",
-      amount:       0,
-      category:     "",
-      note:         "",
-      day_of_month: 1,
-      is_active:    true,
+      account_id:    accounts[0]?.id ?? "",
+      type:          "expense",
+      amount:        0,
+      category:      "",
+      note:          "",
+      day_of_month:  1,
+      is_active:     true,
+      reminder_days: 3,
     },
   })
 
-  const watchType = form.watch("type")
+  const watchType        = form.watch("type")
+  const watchReminderDays = form.watch("reminder_days")
 
   useEffect(() => {
     if (!user) return
@@ -89,13 +91,14 @@ export default function Recurring() {
   const openCreate = () => {
     setEditEntry(null)
     form.reset({
-      account_id:   accounts[0]?.id ?? "",
-      type:         "expense",
-      amount:       0,
-      category:     "",
-      note:         "",
-      day_of_month: 1,
-      is_active:    true,
+      account_id:    accounts[0]?.id ?? "",
+      type:          "expense",
+      amount:        0,
+      category:      "",
+      note:          "",
+      day_of_month:  1,
+      is_active:     true,
+      reminder_days: 3,
     })
     setShowModal(true)
   }
@@ -103,13 +106,14 @@ export default function Recurring() {
   const openEdit = (entry: RecurringTransaction) => {
     setEditEntry(entry)
     form.reset({
-      account_id:   entry.account_id,
-      type:         entry.type,
-      amount:       entry.amount,
-      category:     entry.category ?? "",
-      note:         entry.note     ?? "",
-      day_of_month: entry.day_of_month,
-      is_active:    entry.is_active,
+      account_id:    entry.account_id,
+      type:          entry.type,
+      amount:        entry.amount,
+      category:      entry.category    ?? "",
+      note:          entry.note        ?? "",
+      day_of_month:  entry.day_of_month,
+      is_active:     entry.is_active,
+      reminder_days: entry.reminder_days ?? 3,
     })
     setShowModal(true)
   }
@@ -185,7 +189,7 @@ export default function Recurring() {
         <div>
           <p className="text-[13px] font-medium text-emerald-800">Runs automatically every day at midnight</p>
           <p className="mono text-[10px] text-emerald-600 mt-0.5">
-            Each entry fires once per month on the configured day. Max day is 28 to ensure all months are covered.
+            Each entry fires once per month on the configured day. Bill reminders are sent in advance based on your reminder setting.
           </p>
         </div>
       </div>
@@ -278,6 +282,7 @@ export default function Recurring() {
                 ))}
               </div>
 
+              {/* Account */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Account</Label>
                 <div className="relative">
@@ -295,6 +300,7 @@ export default function Recurring() {
                 {form.formState.errors.account_id && <Err msg={form.formState.errors.account_id.message!} />}
               </div>
 
+              {/* Amount */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Amount</Label>
                 <div className="relative">
@@ -310,6 +316,7 @@ export default function Recurring() {
                 {form.formState.errors.amount && <Err msg={form.formState.errors.amount.message!} />}
               </div>
 
+              {/* Day of month */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">
                   Day of month <span className="text-stone-300 normal-case">(runs on this day every month)</span>
@@ -328,6 +335,32 @@ export default function Recurring() {
                 {form.formState.errors.day_of_month && <Err msg={form.formState.errors.day_of_month.message!} />}
               </div>
 
+              {/* Reminder days */}
+              <div className="flex flex-col gap-1.5">
+                <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400 flex items-center gap-1">
+                  <Bell size={10} /> Remind me
+                  <span className="text-stone-300 normal-case font-normal">(days before due)</span>
+                </Label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 5, 7].map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => form.setValue("reminder_days", d)}
+                      className={cn(
+                        "flex-1 h-9 rounded-xl mono text-[11px] border transition-all",
+                        watchReminderDays === d
+                          ? "bg-emerald-50 border-emerald-300 text-emerald-700"
+                          : "bg-stone-50 border-stone-200 text-stone-500 hover:border-stone-300"
+                      )}
+                    >
+                      {d}d
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Category */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">
                   Category <span className="text-stone-300 normal-case">(optional)</span>
@@ -346,12 +379,13 @@ export default function Recurring() {
                 </div>
               </div>
 
+              {/* Note */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">
-                  Note <span className="text-stone-300 normal-case">(e.g. Salary, Netflix)</span>
+                  Name <span className="text-stone-300 normal-case">(e.g. Meralco, Netflix, Salary)</span>
                 </Label>
                 <Input
-                  placeholder="e.g. Monthly salary"
+                  placeholder="e.g. Meralco Bill, Netflix, Monthly Salary"
                   className="h-10 text-sm bg-stone-50 border-stone-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20"
                   {...form.register("note")}
                 />
@@ -418,12 +452,15 @@ function EntryGroup({
                 <p className="text-[13px] font-medium text-stone-800 truncate">
                   {e.note ?? e.category ?? (isIncome ? "Income" : "Expense")}
                 </p>
-                <div className="flex items-center gap-2 mt-0.5">
+                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                   <AccIcon size={9} className="text-stone-400" />
                   <p className="mono text-[10px] text-stone-400">{e.account?.name}</p>
                   <span className="text-stone-200">·</span>
                   <Calendar size={9} className="text-stone-400" />
                   <p className="mono text-[10px] text-stone-400">Every {ordinal(e.day_of_month)}</p>
+                  <span className="text-stone-200">·</span>
+                  <Bell size={9} className="text-stone-400" />
+                  <p className="mono text-[10px] text-stone-400">{e.reminder_days ?? 3}d before</p>
                   {e.last_run_at && (
                     <>
                       <span className="text-stone-200">·</span>
