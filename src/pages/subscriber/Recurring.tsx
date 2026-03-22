@@ -54,7 +54,6 @@ export default function Recurring() {
   const [deleting,  setDeleting]  = useState<string | null>(null)
   const [toggling,  setToggling]  = useState<string | null>(null)
 
-  // ✅ useForm uses the INPUT type
   const form = useForm<RecurringFormInput>({
     resolver: zodResolver(recurringSchema),
     defaultValues: {
@@ -122,7 +121,6 @@ export default function Recurring() {
     setShowModal(true)
   }
 
-  // ✅ onSubmit uses the OUTPUT type (defaults resolved)
   const onSubmit = async (data: RecurringFormInput) => {
     const payload = data as RecurringFormOutput
     if (!user) return

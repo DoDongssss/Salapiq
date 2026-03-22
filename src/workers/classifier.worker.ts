@@ -27,7 +27,6 @@ const CATEGORY_LABELS = [
   "Other",
 ]
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let classifier: any = null
 
 async function loadModel() {

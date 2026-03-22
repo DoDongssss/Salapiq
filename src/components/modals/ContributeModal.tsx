@@ -108,7 +108,6 @@ export default function ContributeModal({ goal, onClose, onSuccess }: Props) {
           </button>
         </div>
 
-        {/* Goal progress */}
         <div className="px-6 pt-4 pb-2">
           <div className="flex items-center justify-between mb-1.5">
             <p className="mono text-[10px] text-stone-400">
@@ -126,7 +125,6 @@ export default function ContributeModal({ goal, onClose, onSuccess }: Props) {
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 py-4 flex flex-col gap-4">
 
-          {/* Account selector */}
           <div className="flex flex-col gap-1.5">
             <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Deduct from account</Label>
             {accounts.length === 0 ? (
@@ -158,7 +156,6 @@ export default function ContributeModal({ goal, onClose, onSuccess }: Props) {
                 {form.formState.errors.source_account_id && (
                   <p className="mono text-[10px] text-red-400">— {form.formState.errors.source_account_id.message}</p>
                 )}
-                {/* Balance warning */}
                 {selectedAccount && watchAmount > 0 && watchAmount > selectedAccount.balance && (
                   <div className="flex items-center gap-1.5 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
                     <p className="mono text-[10px] text-red-500">
@@ -166,7 +163,6 @@ export default function ContributeModal({ goal, onClose, onSuccess }: Props) {
                     </p>
                   </div>
                 )}
-                {/* Balance preview */}
                 {selectedAccount && watchAmount > 0 && watchAmount <= selectedAccount.balance && (
                   <p className="mono text-[10px] text-stone-400">
                     Balance after: ₱{(selectedAccount.balance - watchAmount).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
@@ -176,7 +172,6 @@ export default function ContributeModal({ goal, onClose, onSuccess }: Props) {
             )}
           </div>
 
-          {/* Amount */}
           <div className="flex flex-col gap-1.5">
             <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Amount</Label>
             <div className="relative">
@@ -196,7 +191,6 @@ export default function ContributeModal({ goal, onClose, onSuccess }: Props) {
               <p className="mono text-[10px] text-red-400">— {form.formState.errors.amount.message}</p>
             )}
 
-            {/* Quick amounts */}
             <div className="flex gap-2">
               {[500, 1000, 5000]
                 .filter((v) => !selectedAccount || v <= selectedAccount.balance)
@@ -223,7 +217,6 @@ export default function ContributeModal({ goal, onClose, onSuccess }: Props) {
             </div>
           </div>
 
-          {/* Note */}
           <div className="flex flex-col gap-1.5">
             <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">
               Note <span className="text-stone-300">(optional)</span>

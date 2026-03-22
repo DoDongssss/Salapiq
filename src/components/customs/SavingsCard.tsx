@@ -38,7 +38,6 @@ export default function SavingsCard({
       isAchieved ? "border-sky-200 bg-sky-50/30" : "border-stone-200 hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)]"
     )}>
 
-      {/* Top row */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-2.5">
           <div className={cn(
@@ -65,7 +64,6 @@ export default function SavingsCard({
           </div>
         </div>
 
-        {/* Action buttons — only shown if canManage */}
         {canManage && (
           <div className="flex items-center gap-1 shrink-0">
             {!isAchieved && (
@@ -99,7 +97,6 @@ export default function SavingsCard({
         )}
       </div>
 
-      {/* Progress ring + amounts */}
       <div className="flex items-center gap-4 mb-4">
         <div className="relative shrink-0">
           <svg width="72" height="72" viewBox="0 0 72 72">
@@ -135,7 +132,6 @@ export default function SavingsCard({
         </div>
       </div>
 
-      {/* Progress bar */}
       <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden mb-3">
         <div
           className={cn("h-full rounded-full transition-all duration-500", isAchieved ? "bg-sky-400" : "bg-emerald-500")}
@@ -143,7 +139,6 @@ export default function SavingsCard({
         />
       </div>
 
-      {/* Footer */}
       <div className="flex items-center justify-between">
         <div>
           {daysLeft !== null ? (

@@ -73,7 +73,6 @@ export default function EditTransactionModal({ transaction, accounts, onClose, o
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 py-5 flex flex-col gap-4">
 
-          {/* Type toggle */}
           <div className="flex gap-1 p-1 bg-stone-100 rounded-xl">
             {(["expense", "income", "transfer"] as const).map((t) => (
               <button
@@ -90,7 +89,6 @@ export default function EditTransactionModal({ transaction, accounts, onClose, o
             ))}
           </div>
 
-          {/* Amount */}
           <div className="flex flex-col gap-1.5">
             <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Amount</Label>
             <div className="relative">
@@ -106,7 +104,6 @@ export default function EditTransactionModal({ transaction, accounts, onClose, o
             {form.formState.errors.amount && <p className="mono text-[10px] text-red-400">— {form.formState.errors.amount.message}</p>}
           </div>
 
-          {/* Account */}
           <SettingsSelect
             label={watchType === "transfer" ? "From account" : "Account"}
             error={form.formState.errors.account_id?.message}
@@ -118,7 +115,6 @@ export default function EditTransactionModal({ transaction, accounts, onClose, o
             ))}
           </SettingsSelect>
 
-          {/* Transfer destination */}
           {watchType === "transfer" && (
             <SettingsSelect label="To account" {...form.register("to_account_id")}>
               <option value="">Select destination</option>
@@ -131,7 +127,6 @@ export default function EditTransactionModal({ transaction, accounts, onClose, o
             </SettingsSelect>
           )}
 
-          {/* Category */}
           {watchType !== "transfer" && (
             <SettingsSelect label="Category" {...form.register("category")}>
               <option value="">No category</option>
@@ -141,7 +136,6 @@ export default function EditTransactionModal({ transaction, accounts, onClose, o
             </SettingsSelect>
           )}
 
-          {/* Note + Date */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Note</Label>

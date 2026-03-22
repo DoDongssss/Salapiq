@@ -291,7 +291,6 @@ export default function Accounts() {
                 </SettingsSelect>
               </div>
 
-              {/* Color picker */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Color</Label>
                 <div className="flex gap-2 flex-wrap">

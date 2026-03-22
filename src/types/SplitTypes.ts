@@ -1,6 +1,5 @@
 import { z } from "zod"
 
-// ─── Row types ────────────────────────────────────────────────
 
 export type ExpenseSplit = {
   id:             string
@@ -14,20 +13,18 @@ export type ExpenseSplit = {
   note:           string | null
   created_at:     string
   updated_at:     string
-  // joined
   owed_by_profile?: { full_name: string | null; avatar_url: string | null; username: string | null }
   transaction?:     { note: string | null; amount: number; date: string; category: string | null }
 }
 
 export type SplitSummary = {
-  totalOwedToMe:   number   // others owe me
-  totalIOwe:       number   // I owe others
-  netBalance:      number   // positive = I'm owed, negative = I owe
+  totalOwedToMe:   number  
+  totalIOwe:       number   
+  netBalance:      number   
   pendingSplits:   ExpenseSplit[]
   settledSplits:   ExpenseSplit[]
 }
 
-// ─── Split member item ────────────────────────────────────────
 
 export type SplitMember = {
   userId:   string
@@ -36,8 +33,6 @@ export type SplitMember = {
   amount:   number
   included: boolean
 }
-
-// ─── Form schema ──────────────────────────────────────────────
 
 export const splitSchema = z.object({
   members: z.array(z.object({
@@ -49,7 +44,5 @@ export const splitSchema = z.object({
 })
 
 export type SplitForm = z.infer<typeof splitSchema>
-
-// ─── Split modes ──────────────────────────────────────────────
 
 export type SplitMode = "equal" | "custom" | "percentage"

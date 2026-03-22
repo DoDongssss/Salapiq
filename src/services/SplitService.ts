@@ -1,8 +1,6 @@
 import { supabase } from "@/lib/supabaseClient"
 import type { ExpenseSplit, SplitSummary } from "@/types/SplitTypes"
 
-// ─── Create splits ────────────────────────────────────────────
-
 export async function createSplits(
   transactionId: string,
   familyId:      string,
@@ -44,8 +42,6 @@ export async function createSplits(
   return null
 }
 
-// ─── Get splits for a family ──────────────────────────────────
-
 export async function getFamilySplits(
   familyId:    string,
   isSettled?:  boolean
@@ -69,7 +65,6 @@ export async function getFamilySplits(
   return data as ExpenseSplit[]
 }
 
-// ─── Get splits for a specific transaction ────────────────────
 
 export async function getTransactionSplits(
   transactionId: string
@@ -86,7 +81,6 @@ export async function getTransactionSplits(
   return data as ExpenseSplit[]
 }
 
-// ─── Settle a split ───────────────────────────────────────────
 
 export async function settleSplit(id: string): Promise<string | null> {
   const { error } = await supabase
@@ -100,7 +94,6 @@ export async function settleSplit(id: string): Promise<string | null> {
   return error ? error.message : null
 }
 
-// ─── Unsettled a split ────────────────────────────────────────
 
 export async function unsettleSplit(id: string): Promise<string | null> {
   const { error } = await supabase
@@ -111,7 +104,6 @@ export async function unsettleSplit(id: string): Promise<string | null> {
   return error ? error.message : null
 }
 
-// ─── Delete splits for a transaction ─────────────────────────
 
 export async function deleteSplits(transactionId: string): Promise<string | null> {
   const { error } = await supabase
@@ -122,7 +114,6 @@ export async function deleteSplits(transactionId: string): Promise<string | null
   return error ? error.message : null
 }
 
-// ─── Get split summary for current user ──────────────────────
 
 export async function getSplitSummary(
   familyId: string,
@@ -133,12 +124,10 @@ export async function getSplitSummary(
   const pending  = splits.filter((s) => !s.is_settled)
   const settled  = splits.filter((s) => s.is_settled)
 
-  // Splits others owe me (I created, they owe)
   const owedToMe = pending
     .filter((s) => s.created_by === userId && s.owed_by !== userId)
     .reduce((sum, s) => sum + s.amount, 0)
 
-  // Splits I owe others (they created, I owe)
   const iOwe = pending
     .filter((s) => s.owed_by === userId && s.created_by !== userId)
     .reduce((sum, s) => sum + s.amount, 0)

@@ -28,10 +28,8 @@ export const recurringSchema = z.object({
   reminder_days: z.number().min(1).max(7).default(3),
 })
 
-// ✅ input type — what useForm sees (defaults are optional)
 export type RecurringFormInput = z.input<typeof recurringSchema>
 
-// ✅ output type — what onSubmit receives (defaults are resolved)
 export type RecurringFormOutput = z.output<typeof recurringSchema>
 
 export const DAY_OPTIONS = Array.from({ length: 28 }, (_, i) => ({

@@ -31,8 +31,6 @@ export function useInsights(): Insight[] {
   return useMemo(() => {
     const insights: Insight[] = []
 
-    // ── Budget insights ────────────────────────────────────────
-
     // Over budget categories
     const overBudget = budgets.filter((b) => Number(b.percent_used) >= 100)
     if (overBudget.length > 0) {
@@ -90,8 +88,6 @@ export function useInsights(): Insight[] {
       })
     }
 
-    // ── Savings insights ───────────────────────────────────────
-
     // Goal close to being achieved
     const closeGoals = goals.filter((g) => {
       const pct = g.target_amount > 0
@@ -137,8 +133,6 @@ export function useInsights(): Insight[] {
         desc:  "You have no savings goals yet. Create one to track your progress towards something meaningful.",
       })
     }
-
-    // ── Income & expense insights ──────────────────────────────
 
     // Spending more than earning
     if (summary.income > 0 && summary.expenses > summary.income) {

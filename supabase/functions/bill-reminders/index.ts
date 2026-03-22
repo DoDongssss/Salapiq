@@ -1,7 +1,3 @@
-// supabase/functions/bill-reminders/index.ts
-// Deployed via: supabase functions deploy bill-reminders
-// Triggered by: pg_cron daily at 00:00 UTC (8AM PHT)
-
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const supabase = createClient(
@@ -13,7 +9,6 @@ Deno.serve(async () => {
   try {
     const today = new Date()
 
-    // Fetch all active recurring transactions
     const { data: entries, error: fetchError } = await supabase
       .from("recurring_transactions")
       .select("id, user_id, note, category, amount, day_of_month, reminder_days, type")

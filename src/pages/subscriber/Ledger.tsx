@@ -231,7 +231,6 @@ export default function Ledger() {
   return (
     <div className="page-reveal">
 
-      {/* Header */}
       <div className="flex items-end justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-stone-900 tracking-tight">Ledger</h1>
@@ -242,7 +241,6 @@ export default function Ledger() {
         )}
       </div>
 
-      {/* Balance card */}
       <div className="bg-[#0f1a12] rounded-2xl p-5 mb-4">
         <p className="mono text-[10px] tracking-[0.15em] uppercase text-emerald-900 mb-1">Total balance</p>
         <p className="text-3xl font-semibold text-white tracking-tight">
@@ -281,7 +279,6 @@ export default function Ledger() {
         </div>
       </div>
 
-      {/* Summary cards */}
       <div className="grid grid-cols-3 gap-4 mb-4">
         <SummaryCard label="Income"   value={summary.income}   accentColor="border-t-emerald-400" />
         <SummaryCard label="Expenses" value={summary.expenses} accentColor="border-t-red-400" />
@@ -293,7 +290,6 @@ export default function Ledger() {
         />
       </div>
 
-      {/* Account strip */}
       <div className="flex gap-3 overflow-x-auto pb-1 mb-4">
         {accountsLoading ? (
           [1, 2, 3].map((i) => (
@@ -366,7 +362,6 @@ export default function Ledger() {
         )}
       </div>
 
-      {/* Filter bar */}
       <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-4 mb-4">
         <div className="flex items-center gap-3 flex-wrap">
 
@@ -461,7 +456,6 @@ export default function Ledger() {
         </div>
       </div>
 
-      {/* Transaction list */}
       {txnLoading ? (
         <div className="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-50 overflow-hidden">
           {Array.from({ length: PAGE_SIZE }).map((_, i) => (

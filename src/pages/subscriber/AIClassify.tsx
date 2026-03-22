@@ -61,7 +61,6 @@ export default function AIClassify() {
     } else {
       toast({ type: "success", title: `Categorized as ${item.suggestedCategory}` })
       remove(item.transaction.id)
-      // Refresh history + stats
       refresh(user.id)
     }
   }
@@ -128,7 +127,6 @@ export default function AIClassify() {
   return (
     <div className="page-reveal">
 
-      {/* Header */}
       <div className="flex items-end justify-between mb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -151,7 +149,6 @@ export default function AIClassify() {
         )}
       </div>
 
-      {/* AI opt-in warning */}
       {!aiOptIn && (
         <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 mb-5">
           <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
@@ -164,7 +161,6 @@ export default function AIClassify() {
         </div>
       )}
 
-      {/* Stats row */}
       {!loading && (
         <div className="grid grid-cols-4 gap-3 mb-5">
           <div className="bg-white rounded-2xl border border-stone-200 p-4 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
@@ -188,7 +184,6 @@ export default function AIClassify() {
         </div>
       )}
 
-      {/* Tabs */}
       <div className="flex items-center gap-1.5 mb-4">
         {(["queue", "history"] as const).map((tab) => (
           <button
@@ -216,7 +211,6 @@ export default function AIClassify() {
         </button>
       </div>
 
-      {/* Queue tab */}
       {activeTab === "queue" && (
         <>
           {loading ? (
@@ -264,7 +258,6 @@ export default function AIClassify() {
         </>
       )}
 
-      {/* History tab */}
       {activeTab === "history" && (
         <>
           {history.length === 0 ? (
@@ -330,8 +323,6 @@ export default function AIClassify() {
     </div>
   )
 }
-
-// ─── Queue row component ───────────────────────────────────────
 
 function QueueRow({
   item, applying, skipping, overrideOpen,
@@ -427,7 +418,6 @@ function QueueRow({
         </div>
       </div>
 
-      {/* Category override dropdown */}
       {overrideOpen && (
         <div className="px-5 pb-4">
           <p className="mono text-[10px] text-stone-400 mb-2">Select a category:</p>

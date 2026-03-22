@@ -88,13 +88,10 @@ export function Toaster() {
                 bg, border
               )}
             >
-              {/* Left accent bar */}
               <div className={cn("absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl", bar)} />
 
-              {/* Icon */}
               <Icon size={16} className={cn("shrink-0 mt-0.5", icon_class)} />
 
-              {/* Content */}
               <div className="flex-1 min-w-0">
                 <p className={cn("text-[13px] font-medium leading-tight", title)}>
                   {t.title}
@@ -106,7 +103,6 @@ export function Toaster() {
                 )}
               </div>
 
-              {/* Dismiss */}
               <button
                 onClick={() => dismiss(t.id)}
                 className="shrink-0 text-stone-300 hover:text-stone-500 transition-colors mt-0.5"
@@ -114,7 +110,6 @@ export function Toaster() {
                 <X size={14} />
               </button>
 
-              {/* Progress bar */}
               <div
                 className={cn("absolute bottom-0 left-0 h-[2px] rounded-full opacity-40", bar)}
                 style={{ animationDuration: `${t.duration ?? 4000}ms` }}

@@ -135,7 +135,6 @@ export default function Budget() {
   return (
     <div className="page-reveal">
 
-      {/* Header */}
       <div className="flex items-end justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-stone-900 tracking-tight">Budget</h1>
@@ -150,7 +149,6 @@ export default function Budget() {
         </Button>
       </div>
 
-      {/* Month selector */}
       <div className="flex items-center justify-between bg-white rounded-2xl border border-stone-200 px-5 py-4 mb-5 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
         <button onClick={prevMonth} className="w-8 h-8 rounded-lg flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-50 transition-colors">
           <ChevronLeft size={16} />
@@ -164,7 +162,6 @@ export default function Budget() {
         </button>
       </div>
 
-      {/* Overview card */}
       {!loading && budgets.length > 0 && (
         <div className="bg-[#0f1a12] rounded-2xl p-5 mb-5">
           <div className="flex items-end justify-between mb-3">
@@ -181,7 +178,6 @@ export default function Budget() {
               </p>
             </div>
           </div>
-          {/* Overall progress bar */}
           <div className="h-2 bg-white/10 rounded-full overflow-hidden">
             <div
               className={cn(
@@ -201,7 +197,6 @@ export default function Budget() {
         </div>
       )}
 
-      {/* Budget cards */}
       {loading ? (
         <div className="grid grid-cols-2 gap-4">
           {[1, 2, 3, 4].map((i) => (
@@ -251,7 +246,6 @@ export default function Budget() {
                   </div>
                 </div>
 
-                {/* Progress bar */}
                 <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden mb-3">
                   <div
                     className={cn("h-full rounded-full transition-all", STATUS_COLORS[status])}
@@ -259,7 +253,6 @@ export default function Budget() {
                   />
                 </div>
 
-                {/* Amounts */}
                 <div className="flex items-end justify-between">
                   <div>
                     <p className="mono text-[10px] text-stone-400">Spent</p>
@@ -294,7 +287,6 @@ export default function Budget() {
         </div>
       )}
 
-      {/* Add / Edit modal */}
       {showModal && (
         <div
           className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
@@ -312,7 +304,6 @@ export default function Budget() {
 
             <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 py-5 flex flex-col gap-4">
 
-              {/* Category */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Category</Label>
                 <div className="relative">
@@ -337,7 +328,6 @@ export default function Budget() {
                 {form.formState.errors.category && <p className="mono text-[10px] text-red-400">— {form.formState.errors.category.message}</p>}
               </div>
 
-              {/* Amount */}
               <div className="flex flex-col gap-1.5">
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Budget limit</Label>
                 <div className="relative">
@@ -353,7 +343,6 @@ export default function Budget() {
                 {form.formState.errors.amount && <p className="mono text-[10px] text-red-400">— {form.formState.errors.amount.message}</p>}
               </div>
 
-              {/* Month / Year */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
                   <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Month</Label>

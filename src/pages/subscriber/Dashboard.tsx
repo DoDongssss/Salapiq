@@ -86,7 +86,6 @@ export default function Dashboard() {
   return (
     <div className="page-reveal">
 
-      {/* Header */}
       <div className="flex items-end justify-between mb-7">
         <div>
           <p className="mono text-[11px] text-stone-400 mb-1 tracking-wide">{getGreeting()}</p>
@@ -103,7 +102,6 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Hero balance */}
       <div className="relative rounded-3xl overflow-hidden mb-5 border border-stone-200">
         <div className="absolute inset-0 bg-gradient-to-br from-stone-50 via-white to-emerald-50/40" />
         <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-emerald-100/30 -translate-y-1/2 translate-x-1/3 blur-3xl" />
@@ -164,7 +162,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Mini summary */}
       <div className="grid grid-cols-3 gap-4 mb-5">
         <MiniCard label="Income"   value={summary.income}   color="emerald" icon={TrendingUp}  />
         <MiniCard label="Expenses" value={summary.expenses} color="red"     icon={TrendingDown} />
