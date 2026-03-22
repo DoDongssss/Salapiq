@@ -4,7 +4,7 @@ import {
   updateAppPreferences, saveNotificationPrefs,
   extractNotificationPrefs,
 } from "@/services/SettingsService"
-import type { UserSettingsRow, NotificationPrefs } from "@/types/SettingsTypes"
+import type { UserSettingsRow, NotificationPrefs } from "@/types"
 
 interface useSettingState {
   settings:    UserSettingsRow | null

@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabaseClient"
-import type { Budget, BudgetSummary, BudgetForm } from "@/types/BudgetTypes"
+import type { Budget, BudgetSummary, BudgetForm } from "@/types"
 
 
 export async function getBudgetSummary(

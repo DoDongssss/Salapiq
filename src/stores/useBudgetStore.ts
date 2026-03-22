@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { supabase } from "@/lib/supabaseClient"
-import type { BudgetSummary } from "@/types/BudgetTypes"
+import type { BudgetSummary } from "@/types"
 import { getBudgetOverview } from "@/services/BudgetService"
 
 interface BudgetState {

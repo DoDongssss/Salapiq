@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabaseClient"
-import type { RecurringTransaction, RecurringFormOutput } from "@/types/RecurringTypes"
+import type { RecurringTransaction, RecurringFormOutput } from "@/types"
 
 export async function getRecurring(userId: string): Promise<RecurringTransaction[]> {
   const { data, error } = await supabase

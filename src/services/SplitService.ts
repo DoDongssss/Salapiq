@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabaseClient"
-import type { ExpenseSplit, SplitSummary } from "@/types/SplitTypes"
+import type { ExpenseSplit, SplitSummary } from "@/types"
 
 export async function createSplits(
   transactionId: string,

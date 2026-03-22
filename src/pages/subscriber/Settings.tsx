@@ -8,7 +8,7 @@ import { useSettingStore } from "@/stores/useSettingStore"
 import {
   profileSchema, updateEmailSchema,
   type ProfileForm, type UpdateEmailForm,
-} from "@/types/SettingsTypes"
+} from "@/types"
 import {
   uploadAvatar, updateEmail,
   resendVerificationEmail, resetPassword,
@@ -18,7 +18,7 @@ import {
   SETTINGS_TABS, CURRENCIES, TIMEZONES,
   THEMES, LANGUAGES, DATE_FORMATS,
   NOTIFICATION_ROWS, PRIVACY_ROWS,
-} from "@/config/subscriber"
+} from "@/config/settings"
 import Switch from "@/components/customs/Switch"
 import SettingsSelect from "@/components/customs/SettingsSelect"
 import {FieldSkeleton} from "@/components/customs/FieldSkeleton"

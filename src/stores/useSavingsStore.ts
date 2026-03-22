@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { getGoals, getContributions, getSavingsOverview } from "@/services/SavingsService"
-import type { SavingsGoal, GoalContribution } from "@/types/SavingsTypes"
+import type { SavingsGoal, GoalContribution } from "@/types"
 
 interface SavingsState {
   goals:         SavingsGoal[]

@@ -28,7 +28,6 @@ export const budgetSchema = z.object({
 
 export type BudgetForm = z.infer<typeof budgetSchema>
 
-
 export type BudgetStatus = "safe" | "warning" | "over"
 
 export function getBudgetStatus(percentUsed: number): BudgetStatus {

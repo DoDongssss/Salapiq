@@ -14,8 +14,8 @@ import {
   type RecurringFormOutput,
   type RecurringTransaction,
   DAY_OPTIONS,
-} from "@/types/RecurringTypes"
-import { TRANSACTION_CATEGORIES } from "@/types/AccountTypes"
+} from "@/types"
+import { TRANSACTION_CATEGORIES } from "@/types"
 import SpinnerBtn from "@/components/customs/SpinnerBtn"
 import {
   Plus, Pencil, Trash2, X, RefreshCw,

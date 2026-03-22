@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { getProfile, updateProfile } from "@/services/SettingsService"
-import type { Profile, ProfileForm } from "@/types/SettingsTypes"
+import type { Profile, ProfileForm } from "@/types"
 
 interface ProfileState {
   profile:     Profile | null

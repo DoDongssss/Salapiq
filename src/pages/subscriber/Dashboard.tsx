@@ -8,8 +8,8 @@ import { useSavingsStore }      from "@/stores/useSavingsStore"
 import { useProfileStore }      from "@/stores/useProfileStore"
 import { useNotificationStore } from "@/stores/useNotificationStore"
 import { useBudgetStore }       from "@/stores/useBudgetStore"
-import { getBudgetStatus }      from "@/types/BudgetTypes"
-import { STATUS_COLORS }        from "@/config/subscriber"
+import { getBudgetStatus }      from "@/types"
+import { STATUS_COLORS } from "@/config/budget"
 import {
   TrendingUp, TrendingDown, ArrowLeftRight,
   Wallet, Users, PiggyBank, Sparkles,

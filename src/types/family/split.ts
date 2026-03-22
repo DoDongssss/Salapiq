@@ -1,6 +1,5 @@
 import { z } from "zod"
 
-
 export type ExpenseSplit = {
   id:             string
   transaction_id: string
@@ -18,13 +17,12 @@ export type ExpenseSplit = {
 }
 
 export type SplitSummary = {
-  totalOwedToMe:   number  
-  totalIOwe:       number   
-  netBalance:      number   
+  totalOwedToMe:   number
+  totalIOwe:       number
+  netBalance:      number
   pendingSplits:   ExpenseSplit[]
   settledSplits:   ExpenseSplit[]
 }
-
 
 export type SplitMember = {
   userId:   string

@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabaseClient"
 import type {
   SavingsGoal, GoalForm, GoalContribution,
   ContributionForm, GoalStatus,
-} from "@/types/SavingsTypes"
+} from "@/types"
 
 export async function getGoals(
   userId:   string,

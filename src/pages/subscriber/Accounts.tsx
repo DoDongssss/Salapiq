@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/useToast"
 import {
   accountSchema, type AccountForm, type Account,
   ACCOUNT_TYPES, ACCOUNT_PROVIDERS, ACCOUNT_COLORS,
-} from "@/types/AccountTypes"
+} from "@/types"
 import {
 createAccount, updateAccount, deleteAccount, getTotalBalance,
 } from "@/services/AccountService"

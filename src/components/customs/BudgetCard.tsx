@@ -1,9 +1,9 @@
 import { Pencil, Trash2 } from "lucide-react"
-import { getBudgetStatus, type BudgetSummary } from "@/types/BudgetTypes"
+import { getBudgetStatus, type BudgetSummary } from "@/types"
 import { cn } from "@/lib/utils"
 import {
   STATUS_COLORS, STATUS_TEXT, STATUS_LABELS,
-} from "@/config/subscriber"
+} from "@/config/budget"
 
 type Props = {
   budget:    BudgetSummary

@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabaseClient"
-import type { TransactionWithAccount } from "@/services/AccountService"
-import type { AIClassification, AIAccuracyStats } from "@/types/AIClassifyTypes"
-import { classifyByKeyword } from "@/types/AIClassifyTypes"
+import type { TransactionWithAccount } from "@/types/finance/account"
+import type { AIClassification, AIAccuracyStats } from "@/types"
+import { classifyByKeyword } from "@/types"
 
 // ─── Fetch unclassified transactions ─────────────────────────
 

@@ -6,9 +6,9 @@ import { useAccountStore } from "@/stores/useAccountStore"
 import {
   transactionSchema, type TransactionForm,
   type Account, TRANSACTION_CATEGORIES,
-} from "@/types/AccountTypes"
+  type TransactionWithAccount,
+} from "@/types"
 import { updateTransaction } from "@/services/AccountService"
-import type { TransactionWithAccount } from "@/services/AccountService"
 import SettingsSelect from "@/components/customs/SettingsSelect"
 import SpinnerBtn from "@/components/customs/SpinnerBtn"
 import { X } from "lucide-react"

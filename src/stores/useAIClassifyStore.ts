@@ -3,8 +3,9 @@ import {
   getUnclassified, classifyNote,
   getClassificationHistory, getAccuracyStats,
 } from "@/services/AIClassifyService"
-import type { ClassifyQueueItem, AIClassification, AIAccuracyStats } from "@/types/AIClassifyTypes"
-import type { TransactionWithAccount } from "@/services/AccountService"
+import type {
+  ClassifyQueueItem, AIClassification, AIAccuracyStats, TransactionWithAccount,
+} from "@/types"
 
 interface AIState {
   queue:       ClassifyQueueItem[]

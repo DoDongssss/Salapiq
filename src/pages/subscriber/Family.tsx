@@ -14,7 +14,7 @@ import {
   type PaginatedFamilyTransactions,
 } from "@/services/FamilyService"
 import { getAccounts } from "@/services/AccountService"
-import type { TransactionWithAccount } from "@/services/AccountService"
+import type { TransactionWithAccount } from "@/types"
 import Avatar from "@/components/customs/Avatar"
 import FamilySplit from "@/pages/subscriber/FamilySplit"
 import Pagination from "@/components/customs/Pagination"
@@ -31,7 +31,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import type { Account } from "@/types/AccountTypes"
+import type { Account } from "@/types"
 
 const PAGE_SIZE = 5
 
