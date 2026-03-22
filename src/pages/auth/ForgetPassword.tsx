@@ -41,7 +41,6 @@ export default function ForgotPassword() {
       <div className="salapiq-root h-screen w-full flex items-center justify-center bg-[#f7f5f0] p-4">
         <div className="w-full max-w-[760px] min-h-[460px] flex rounded-2xl overflow-hidden shadow-[0_8px_60px_rgba(0,0,0,0.10)] border border-stone-200/80">
 
-          {/* ── Left: Brand panel ── */}
           <div className="panel-reveal hidden md:flex flex-col justify-between w-[44%] bg-[#0f1a12] p-10 relative overflow-hidden">
             <div className="absolute inset-0 pointer-events-none">
               <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-emerald-500/10 blur-3xl" />

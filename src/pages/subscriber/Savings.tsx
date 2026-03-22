@@ -37,8 +37,6 @@ export default function Savings() {
 
   useEffect(() => {
     if (!user) return
-    // Always refresh on mount so family goals load correctly
-    // regardless of store initialized state
     refresh(user.id, family?.id)
   }, [user, family?.id])
 
@@ -79,7 +77,6 @@ export default function Savings() {
   return (
     <div className="page-reveal">
 
-      {/* Header */}
       <div className="flex items-end justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-stone-900 tracking-tight">Savings</h1>
@@ -92,7 +89,6 @@ export default function Savings() {
         </Button>
       </div>
 
-      {/* Overview card */}
       {!loading && goals.length > 0 && (
         <div className="bg-[#0f1a12] rounded-2xl p-5 mb-5">
           <div className="flex items-start justify-between mb-4">
@@ -116,7 +112,6 @@ export default function Savings() {
             </div>
           </div>
 
-          {/* Overall progress */}
           <div className="h-2.5 bg-white/10 rounded-full overflow-hidden mb-2">
             <div
               className="h-full bg-emerald-400 rounded-full transition-all duration-700"
@@ -124,7 +119,6 @@ export default function Savings() {
             />
           </div>
 
-          {/* Per-goal mini bars */}
           {goals.filter(g => g.status === "active").length > 1 && (
             <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-2 gap-2">
               {goals.filter(g => g.status === "active").map((g) => {
@@ -146,7 +140,6 @@ export default function Savings() {
         </div>
       )}
 
-      {/* Status filter tabs */}
       {!loading && goals.length > 0 && (
         <div className="flex items-center gap-1.5 mb-4">
           {GOAL_STATUS_FILTER.map(({ value, label }) => (
@@ -166,7 +159,6 @@ export default function Savings() {
         </div>
       )}
 
-      {/* Goal cards */}
       {loading ? (
         <div className="grid grid-cols-2 gap-4">
           {[1, 2, 3, 4].map((i) => (

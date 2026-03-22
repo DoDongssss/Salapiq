@@ -117,7 +117,6 @@ export default function GoalModal({ goal, onClose }: Props) {
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 py-5 flex flex-col gap-4">
 
-          {/* Personal / Family toggle — admins only */}
           {family && isFamilyAdmin && (
             <div className="flex flex-col gap-1.5">
               <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Goal type</Label>
@@ -155,7 +154,6 @@ export default function GoalModal({ goal, onClose }: Props) {
             </div>
           )}
 
-          {/* Title */}
           <div className="flex flex-col gap-1.5">
             <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Goal name</Label>
             <Input
@@ -166,7 +164,6 @@ export default function GoalModal({ goal, onClose }: Props) {
             {form.formState.errors.title && <p className="mono text-[10px] text-red-400">— {form.formState.errors.title.message}</p>}
           </div>
 
-          {/* Category grid */}
           <div className="flex flex-col gap-1.5">
             <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Category</Label>
             <div className="grid grid-cols-4 gap-2">
@@ -193,7 +190,6 @@ export default function GoalModal({ goal, onClose }: Props) {
             {form.formState.errors.category && <p className="mono text-[10px] text-red-400">— {form.formState.errors.category.message}</p>}
           </div>
 
-          {/* Target + Priority */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Target amount</Label>
@@ -237,7 +233,6 @@ export default function GoalModal({ goal, onClose }: Props) {
             </div>
           </div>
 
-          {/* Target date */}
           <div className="flex flex-col gap-1.5">
             <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">
               Target date <span className="text-stone-300">(optional)</span>

@@ -34,7 +34,6 @@ export default function SplitModal({ transactionId, totalAmount, onClose, onSpli
   const [note,       setNote]       = useState("")
   const [submitting, setSubmitting] = useState(false)
 
-  // Init members from family — exclude self
   useEffect(() => {
     if (!family || !user) return
     let cancelled = false
@@ -57,7 +56,6 @@ export default function SplitModal({ transactionId, totalAmount, onClose, onSpli
     return () => { cancelled = true }
   }, [family?.id, user?.id])
 
-  // Recalculate amounts when mode or included members change
   const includedCount = members.filter((m) => m.included).length
 
   useEffect(() => {
@@ -143,7 +141,6 @@ export default function SplitModal({ transactionId, totalAmount, onClose, onSpli
           }
         `}</style>
 
-        {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-stone-100">
           <div>
             <h2 className="text-[15px] font-semibold text-stone-900">Split expense</h2>
@@ -158,7 +155,6 @@ export default function SplitModal({ transactionId, totalAmount, onClose, onSpli
 
         <div className="px-6 py-5 flex flex-col gap-4">
 
-          {/* Mode selector */}
           <div className="flex gap-1.5">
             {MODES.map(({ value, icon: Icon, label }) => (
               <button
@@ -176,7 +172,6 @@ export default function SplitModal({ transactionId, totalAmount, onClose, onSpli
             ))}
           </div>
 
-          {/* Member rows */}
           <div className="flex flex-col gap-2">
             {members.map((m) => (
               <div
@@ -247,7 +242,6 @@ export default function SplitModal({ transactionId, totalAmount, onClose, onSpli
             ))}
           </div>
 
-          {/* Summary bar */}
           <div className={cn(
             "flex items-center justify-between px-4 py-3 rounded-xl border",
             remaining < 0
@@ -278,7 +272,6 @@ export default function SplitModal({ transactionId, totalAmount, onClose, onSpli
             </div>
           </div>
 
-          {/* Note */}
           <div className="flex flex-col gap-1.5">
             <label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">
               Note <span className="text-stone-300 normal-case">(optional)</span>

@@ -26,12 +26,10 @@ export default function Pagination({ page, totalPages, total, pageSize, onChange
   return (
     <div className="flex items-center justify-between mt-5">
 
-      {/* Count */}
       <p className="mono text-[11px] text-stone-400">
         <span className="text-stone-600 font-medium">{from}–{to}</span> of {total.toLocaleString()}
       </p>
 
-      {/* Controls */}
       <div className="flex items-center gap-1">
         <button
           onClick={() => onChange(page - 1)}

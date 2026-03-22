@@ -33,7 +33,6 @@ export default function SettleSplitModal({ split, onClose, onSettled }: Props) {
     if (!user || !selectedAccountId) return
     setSubmitting(true)
 
-    // 1. Create expense transaction from payer's account
     const { error: txnError } = await createTransaction(user.id, {
       account_id:    selectedAccountId,
       type:          "expense",
@@ -50,7 +49,6 @@ export default function SettleSplitModal({ split, onClose, onSettled }: Props) {
       return
     }
 
-    // 2. Mark split as settled
     const settleError = await settleSplit(split.id)
 
     if (settleError) {
@@ -59,7 +57,6 @@ export default function SettleSplitModal({ split, onClose, onSettled }: Props) {
       return
     }
 
-    // 3. Refresh accounts
     await refreshAccounts(user.id)
 
     toast({
@@ -89,7 +86,6 @@ export default function SettleSplitModal({ split, onClose, onSettled }: Props) {
           }
         `}</style>
 
-        {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-stone-100">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-sky-100 flex items-center justify-center">
@@ -107,7 +103,6 @@ export default function SettleSplitModal({ split, onClose, onSettled }: Props) {
 
         <div className="px-6 py-5 flex flex-col gap-4">
 
-          {/* Amount summary */}
           <div className="bg-stone-50 rounded-xl p-4 flex items-center justify-between">
             <div>
               <p className="mono text-[9px] text-stone-400 uppercase tracking-[0.1em] mb-1">Amount to settle</p>
@@ -121,7 +116,6 @@ export default function SettleSplitModal({ split, onClose, onSettled }: Props) {
             </div>
           </div>
 
-          {/* Account selector */}
           <div className="flex flex-col gap-1.5">
             <label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400 flex items-center gap-1">
               <Wallet size={10} /> Pay from account
@@ -176,7 +170,6 @@ export default function SettleSplitModal({ split, onClose, onSettled }: Props) {
             )}
           </div>
 
-          {/* Balance after */}
           {selectedAccount && hasEnough && (
             <p className="mono text-[10px] text-stone-400 text-center">
               Balance after settlement: ₱{(selectedAccount.balance - split.amount).toLocaleString("en-PH", { minimumFractionDigits: 2 })}

@@ -48,11 +48,9 @@ export default function FamilySplits({ family }: Props) {
 
   const handleSettle = async (split: ExpenseSplit) => {
     if (!split.is_settled) {
-      // Open modal to choose account and create transaction
       setSettlingModal(split)
       return
     }
-    // Unsettle — direct, no transaction needed
     setSettling(split.id)
     const error = await unsettleSplit(split.id)
     setSettling(null)
@@ -71,7 +69,6 @@ export default function FamilySplits({ family }: Props) {
   return (
     <div className="flex flex-col gap-5">
 
-      {/* Summary cards */}
       {!loading && summary && (
         <div className="grid grid-cols-3 gap-3">
           <div className={cn(
@@ -103,7 +100,6 @@ export default function FamilySplits({ family }: Props) {
         </div>
       )}
 
-      {/* Tabs */}
       <div className="flex gap-1.5">
         {(["pending", "settled"] as const).map((tab) => (
           <button
@@ -126,7 +122,6 @@ export default function FamilySplits({ family }: Props) {
         ))}
       </div>
 
-      {/* Split list */}
       {loading ? (
         <div className="flex flex-col gap-2">
           {[1, 2, 3].map((i) => (
@@ -167,7 +162,6 @@ export default function FamilySplits({ family }: Props) {
                   split.is_settled && "opacity-60"
                 )}
               >
-                {/* Direction icon */}
                 <div className={cn(
                   "w-9 h-9 rounded-xl flex items-center justify-center shrink-0",
                   iOwe   ? "bg-red-50"     :
