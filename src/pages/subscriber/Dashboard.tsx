@@ -164,9 +164,9 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-3 gap-2.5 sm:gap-4 mb-4 sm:mb-5">
-        <SummaryCard label="Income"   value={summary.income}   color="emerald" Icon={TrendingUp}  />
-        <SummaryCard label="Expenses" value={summary.expenses} color="red"     Icon={TrendingDown} />
-        <SummaryCard label="Savings" value={ov.totalSaved} color="sky" Icon={PiggyBank} sub={`${ov.activeGoals} goal${ov.activeGoals !== 1 ? "s" : ""} active`} />
+        <SummaryCard label="Income"   value={summary.income}   color="emerald"  Icon={TrendingUp}  />
+        <SummaryCard label="Expenses" value={summary.expenses} color="red"      Icon={TrendingDown} />
+        <SummaryCard label="Savings" value={ov.totalSaved} color="sky"          Icon={PiggyBank} sub={`${ov.activeGoals} goal${ov.activeGoals !== 1 ? "s" : ""} active`} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">

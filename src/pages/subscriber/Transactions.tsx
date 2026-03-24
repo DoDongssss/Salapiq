@@ -15,7 +15,7 @@ import {
 import { formatDate, currentMonthLabel } from "@/lib/utils"
 import SummaryCard from "@/components/customs/SummaryCard"
 import Pagination from "@/components/customs/Pagination"
-import { TrendingDown, Trash2, Search, X, SlidersHorizontal, Wallet } from "lucide-react"
+import { TrendingDown, Trash2, Search, X, SlidersHorizontal, Wallet, TrendingUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const PAGE_SIZE     = 5
@@ -197,9 +197,9 @@ export default function Transactions() {
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <SummaryCard label="Income"   value={summary.income}      color="emerald" icon={TrendingUp}  />
-        <SummaryCard label="Expenses" value={summary.expenses}    color="red"     icon={TrendingDown}  />
-        <SummaryCard label="Net"      value={summary.net}         color="sky"     con={Wallet}  />
+        <SummaryCard label="Income"   value={summary.income}      color="emerald" Icon={TrendingUp}  />
+        <SummaryCard label="Expenses" value={summary.expenses}    color="red"     Icon={TrendingDown}  />
+        <SummaryCard label="Net"      value={summary.net}         color="sky"     Icon={Wallet}  />
       </div>
 
       <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-4 mb-4">

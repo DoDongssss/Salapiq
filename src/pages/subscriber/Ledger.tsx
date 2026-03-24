@@ -300,7 +300,7 @@ export default function Ledger() {
       <div className="grid grid-cols-3 gap-2">
         <SummaryCard label="Income"   value={summary.income}      color="emerald" Icon={TrendingUp}     sub="All time" />
         <SummaryCard label="Expenses" value={summary.expenses}    color="red"     Icon={TrendingDown}   sub="All time" />
-        <SummaryCard label="Net"      value={summary.net}         color="sky"     Icon={Wallet}     sub="All time"/>
+        <SummaryCard label="Net"      value={summary.net}         color="sky"     Icon={Wallet}         sub="All time"/>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">

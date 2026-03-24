@@ -1,5 +1,4 @@
 import { cn, formatCurrency } from "@/lib/utils"
-import type { LucideIcon } from "lucide-react"
 
 type SummaryCardProps = {
   label:      string
@@ -7,7 +6,7 @@ type SummaryCardProps = {
   currency?:  string
   color:      "emerald" | "red" | "sky"
   sub?:       string | null
-  Icon?:      LucideIcon
+  Icon?:      React.ComponentType<SVGProps<SVGSVGElement>>
 }
 
 export default function SummaryCard({
@@ -28,7 +27,7 @@ export default function SummaryCard({
         <div className={cn("bg-white rounded-2xl border-t-2 border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-3 sm:p-4", c.border)}>
             <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-2.5">
                 <div className={cn("w-6 h-6 rounded-lg flex items-center justify-center", c.bg)}>
-                <Icon size={12} className={c.text} />
+                    {Icon && <Icon size={12} className={c.text} />}
                 </div>
                 <p className="mono text-[9px] sm:text-[10px] text-stone-400 uppercase tracking-[0.1em]">{label}</p>
             </div>
