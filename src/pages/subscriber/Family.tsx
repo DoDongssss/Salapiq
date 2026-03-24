@@ -43,11 +43,11 @@ const ACCOUNT_ICONS: Record<string, LucideIcon> = {
 }
 
 const NAV = [
-  { to: "/app/family",              icon: Home,           label: "Overview",     end: true  },
-  { to: "/app/family/members",      icon: Users,          label: "Members",      end: false },
-  { to: "/app/family/accounts",     icon: Wallet,         label: "Accounts",     end: false },
-  { to: "/app/family/transactions", icon: ArrowLeftRight, label: "Transactions", end: false },
-  { to: "/app/family/splits", icon: SplitSquareHorizontal, label: "Splits", end: false },
+  { to: "/app/family",              icon: Home,                   label: "Overview",     end: true  },
+  { to: "/app/family/members",      icon: Users,                  label: "Members",      end: false },
+  { to: "/app/family/accounts",     icon: Wallet,                 label: "Accounts",     end: false },
+  { to: "/app/family/transactions", icon: ArrowLeftRight,         label: "Transactions", end: false },
+  { to: "/app/family/splits",       icon: SplitSquareHorizontal,  label: "Splits",       end: false },
 ]
 
 type TypeFilter = "all" | "income" | "expense" | "transfer"
@@ -82,7 +82,7 @@ export default function Family() {
 
   if (!loading && !family) {
     return (
-      <div className="page-reveal flex flex-col items-center justify-center min-h-[60vh] gap-6">
+      <div className="page-reveal flex flex-col items-center justify-center min-h-[60vh] gap-6 px-4">
         <div className="text-center">
           <div className="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center mx-auto mb-4">
             <Users size={28} className="text-emerald-600" />
@@ -92,11 +92,12 @@ export default function Family() {
             Create a family or join one with an invite code
           </p>
         </div>
-        <div className="flex gap-3">
-          <Button onClick={() => setShowCreate(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-5">
+        {/* Stack buttons on mobile */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <Button onClick={() => setShowCreate(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-5 w-full sm:w-auto">
             <Plus size={13} className="mr-1.5" /> Create family
           </Button>
-          <Button onClick={() => setShowJoin(true)} variant="outline" className="text-[12px] h-9 px-5 border-stone-200 text-stone-600">
+          <Button onClick={() => setShowJoin(true)} variant="outline" className="text-[12px] h-9 px-5 border-stone-200 text-stone-600 w-full sm:w-auto">
             Join with code
           </Button>
         </div>
@@ -120,7 +121,7 @@ export default function Family() {
     return (
       <div className="page-reveal">
         <div className="h-8 w-40 bg-stone-100 rounded animate-pulse mb-6" />
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="h-24 bg-stone-100 rounded-2xl animate-pulse" />
           ))}
@@ -131,39 +132,42 @@ export default function Family() {
 
   return (
     <div className="page-reveal">
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
             <Users size={18} className="text-emerald-600" />
           </div>
-          <div>
-            <h1 className="text-xl font-semibold text-stone-900 tracking-tight">{family?.name}</h1>
+          <div className="min-w-0">
+            <h1 className="text-xl font-semibold text-stone-900 tracking-tight truncate">{family?.name}</h1>
             <p className="mono text-[10px] text-stone-400">
               {family?.members.length} member{family?.members.length !== 1 ? "s" : ""}
             </p>
           </div>
         </div>
         {myRole === "admin" && (
-          <span className="mono text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+          <span className="mono text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0 ml-2">
             <Crown size={9} /> Admin
           </span>
         )}
       </div>
 
-      <div className="flex gap-1 mb-6 bg-stone-100 p-1 rounded-xl w-fit">
-        {NAV.map(({ to, icon: Icon, label, end }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            className={({ isActive }) => cn(
-              "flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-medium transition-all",
-              isActive ? "bg-white text-stone-900 shadow-sm" : "text-stone-500 hover:text-stone-700"
-            )}
-          >
-            <Icon size={13} />{label}
-          </NavLink>
-        ))}
+      <div className="mb-6 overflow-x-auto pb-1 scrollbar-none">
+        <div className="flex gap-1 bg-stone-100 p-1 rounded-xl w-max min-w-full sm:w-fit">
+          {NAV.map(({ to, icon: Icon, label, end }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) => cn(
+                "flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-medium transition-all whitespace-nowrap",
+                isActive ? "bg-white text-stone-900 shadow-sm" : "text-stone-500 hover:text-stone-700"
+              )}
+            >
+              <Icon size={13} />{label}
+            </NavLink>
+          ))}
+        </div>
       </div>
 
       <Routes>
@@ -210,21 +214,22 @@ function FamilyOverview({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6">
+      <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-5 sm:p-6">
         <h2 className="text-[14px] font-semibold text-stone-900 mb-1">Invite code</h2>
         <p className="mono text-[11px] text-stone-400 mb-4">Share this code so others can join</p>
-        <div className="flex items-center gap-3">
+        {/* Stack on mobile, row on sm+ */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="flex-1 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3">
-            <p className="mono text-[20px] font-semibold text-stone-900 tracking-[0.2em]">{family.invite_code}</p>
+            <p className="mono text-[18px] sm:text-[20px] font-semibold text-stone-900 tracking-[0.2em]">{family.invite_code}</p>
           </div>
-          <Button onClick={copyCode} variant="outline" className="h-12 px-4 border-stone-200 text-stone-600 hover:border-emerald-400 hover:text-emerald-600">
+          <Button onClick={copyCode} variant="outline" className="h-12 px-4 border-stone-200 text-stone-600 hover:border-emerald-400 hover:text-emerald-600 w-full sm:w-auto">
             <Copy size={14} className="mr-1.5" />
             {copied ? "Copied!" : "Copy"}
           </Button>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6">
+      <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-5 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[14px] font-semibold text-stone-900">Members</h2>
           <button onClick={() => navigate("/app/family/members")} className="mono text-[10px] text-emerald-600 hover:underline flex items-center gap-0.5">
@@ -235,12 +240,12 @@ function FamilyOverview({
           {family.members.slice(0, 4).map((m) => (
             <div key={m.id} className="flex items-center gap-3">
               <Avatar name={m.profile?.full_name ?? "?"} url={m.profile?.avatar_url} size="sm" />
-              <div className="flex-1">
-                <p className="text-[13px] font-medium text-stone-800">{m.profile?.full_name}</p>
-                <p className="mono text-[10px] text-stone-400">@{m.profile?.username}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-medium text-stone-800 truncate">{m.profile?.full_name}</p>
+                <p className="mono text-[10px] text-stone-400 truncate">@{m.profile?.username}</p>
               </div>
               {m.role === "admin" && (
-                <span className="mono text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                <span className="mono text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shrink-0">
                   <Crown size={8} /> Admin
                 </span>
               )}
@@ -251,22 +256,22 @@ function FamilyOverview({
 
       {myRole !== "admin" && (
         <div className="bg-white rounded-2xl border border-red-200 p-5">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <p className="text-[13px] font-medium text-red-600">Leave family</p>
               <p className="mono text-[10px] text-stone-400 mt-0.5">You can rejoin later with the invite code</p>
             </div>
             {confirmLeave ? (
               <div className="flex items-center gap-2">
-                <Button onClick={handleLeave} disabled={leaving} className="text-[12px] h-9 bg-red-500 hover:bg-red-600 text-white">
+                <Button onClick={handleLeave} disabled={leaving} className="text-[12px] h-9 bg-red-500 hover:bg-red-600 text-white flex-1 sm:flex-none">
                   {leaving ? "Leaving..." : "Confirm"}
                 </Button>
-                <Button onClick={() => setConfirmLeave(false)} variant="outline" className="text-[12px] h-9 border-stone-200 text-stone-600">
+                <Button onClick={() => setConfirmLeave(false)} variant="outline" className="text-[12px] h-9 border-stone-200 text-stone-600 flex-1 sm:flex-none">
                   Cancel
                 </Button>
               </div>
             ) : (
-              <Button onClick={() => setConfirmLeave(true)} variant="outline" className="text-[12px] h-9 border-red-200 text-red-500 hover:bg-red-50">
+              <Button onClick={() => setConfirmLeave(true)} variant="outline" className="text-[12px] h-9 border-red-200 text-red-500 hover:bg-red-50 w-full sm:w-auto">
                 <LogOut size={13} className="mr-1.5" /> Leave
               </Button>
             )}
@@ -320,12 +325,12 @@ function FamilyMembers({
     <div className="flex flex-col gap-5">
       {myRole === "admin" && (
         <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-5">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <p className="text-[13px] font-medium text-stone-800">Invite code</p>
               <p className="mono text-[14px] text-emerald-700 font-semibold tracking-[0.15em] mt-0.5">{family.invite_code}</p>
             </div>
-            <Button onClick={handleRegenCode} variant="outline" className="text-[11px] h-8 px-3 border-stone-200 text-stone-600 hover:border-emerald-400 hover:text-emerald-600">
+            <Button onClick={handleRegenCode} variant="outline" className="text-[11px] h-8 px-3 border-stone-200 text-stone-600 hover:border-emerald-400 hover:text-emerald-600 w-full sm:w-auto">
               <RefreshCw size={11} className="mr-1" /> Regenerate
             </Button>
           </div>
@@ -343,10 +348,10 @@ function FamilyMembers({
           const isAdmin      = myRole === "admin"
           const isConfirming = confirmRemove === m.user_id
           return (
-            <div key={m.id} className="flex items-center gap-3 px-5 py-4 border-b border-stone-50 last:border-0">
+            <div key={m.id} className="flex items-start sm:items-center gap-3 px-5 py-4 border-b border-stone-50 last:border-0">
               <Avatar name={m.profile?.full_name ?? "?"} url={m.profile?.avatar_url} />
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-[13px] font-medium text-stone-800">
                     {m.profile?.full_name}
                     {isMe && <span className="mono text-[9px] text-stone-400 ml-1">(you)</span>}
@@ -357,12 +362,32 @@ function FamilyMembers({
                     </span>
                   )}
                 </div>
-                <p className="mono text-[10px] text-stone-400 mt-0.5">
+                <p className="mono text-[10px] text-stone-400 mt-0.5 truncate">
                   {m.profile?.email} · Joined {new Date(m.joined_at).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}
                 </p>
+                {isAdmin && !isMe && (
+                  <div className="flex items-center gap-1.5 mt-2 sm:hidden">
+                    {isConfirming ? (
+                      <>
+                        <Button onClick={() => handleRemove(m)} className="text-[10px] h-7 px-2.5 bg-red-500 hover:bg-red-600 text-white">Confirm</Button>
+                        <Button onClick={() => setConfirmRemove(null)} variant="outline" className="text-[10px] h-7 px-2.5 border-stone-200 text-stone-500">Cancel</Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button onClick={() => handleRoleToggle(m)} variant="outline" className="text-[10px] h-7 px-2.5 border-stone-200 text-stone-500 hover:border-emerald-300 hover:text-emerald-600">
+                          {m.role === "admin" ? "Make member" : "Make admin"}
+                        </Button>
+                        <button onClick={() => setConfirmRemove(m.user_id)} className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-200 hover:text-red-400 hover:bg-red-50 transition-colors">
+                          <UserMinus size={12} />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
+              {/* Admin actions inline on sm+ */}
               {isAdmin && !isMe && (
-                <div className="flex items-center gap-1.5 shrink-0">
+                <div className="hidden sm:flex items-center gap-1.5 shrink-0">
                   {isConfirming ? (
                     <>
                       <Button onClick={() => handleRemove(m)} className="text-[10px] h-7 px-2.5 bg-red-500 hover:bg-red-600 text-white">Confirm</Button>
@@ -467,11 +492,11 @@ function FamilyAccounts({ family }: { family: FamilyWithMembers }) {
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: a.color + "22" }}>
                   <Icon size={15} style={{ color: a.color }} />
                 </div>
-                <div className="flex-1">
-                  <p className="text-[13px] font-medium text-stone-800">{a.name}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-medium text-stone-800 truncate">{a.name}</p>
                   <p className="mono text-[10px] text-stone-400">₱{a.balance.toLocaleString("en-PH", { minimumFractionDigits: 2 })}</p>
                 </div>
-                <button onClick={() => handleUnlink(a.id)} className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-200 hover:text-red-400 hover:bg-red-50 transition-colors">
+                <button onClick={() => handleUnlink(a.id)} className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-200 hover:text-red-400 hover:bg-red-50 transition-colors shrink-0">
                   <X size={12} />
                 </button>
               </div>
@@ -493,11 +518,11 @@ function FamilyAccounts({ family }: { family: FamilyWithMembers }) {
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: a.color + "22" }}>
                   <Icon size={15} style={{ color: a.color }} />
                 </div>
-                <div className="flex-1">
-                  <p className="text-[13px] font-medium text-stone-800">{a.name}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-medium text-stone-800 truncate">{a.name}</p>
                   <p className="mono text-[10px] text-stone-400">₱{a.balance.toLocaleString("en-PH", { minimumFractionDigits: 2 })}</p>
                 </div>
-                <Button onClick={() => handleLink(a.id)} className="text-[11px] h-7 px-3 bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Button onClick={() => handleLink(a.id)} className="text-[11px] h-7 px-3 bg-emerald-600 hover:bg-emerald-700 text-white shrink-0">
                   <Plus size={11} className="mr-1" /> Share
                 </Button>
               </div>
@@ -574,8 +599,8 @@ function FamilyTransactions({ family }: { family: FamilyWithMembers }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-4">
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="relative flex-1 min-w-[200px]">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+          <div className="relative flex-1">
             <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
             <input
               type="text"
@@ -591,32 +616,34 @@ function FamilyTransactions({ family }: { family: FamilyWithMembers }) {
             )}
           </div>
 
-          <div className="relative">
-            <select
-              value={typeFilter}
-              onChange={(e) => handleTypeFilter(e.target.value as TypeFilter)}
-              className="h-9 pl-3 pr-8 text-[12px] mono bg-stone-50 border border-stone-200 rounded-xl text-stone-700 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-colors appearance-none cursor-pointer"
-            >
-              {TYPE_OPTIONS.map(({ value, label }) => (
-                <option key={value} value={value}>{label}</option>
-              ))}
-            </select>
-            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none">
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </span>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <select
+                value={typeFilter}
+                onChange={(e) => handleTypeFilter(e.target.value as TypeFilter)}
+                className="h-9 pl-3 pr-8 text-[12px] mono bg-stone-50 border border-stone-200 rounded-xl text-stone-700 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-colors appearance-none cursor-pointer"
+              >
+                {TYPE_OPTIONS.map(({ value, label }) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                  <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </span>
+            </div>
+
+            {!loading && (
+              <p className="mono text-[11px] text-stone-400 ml-auto sm:ml-0">{total.toLocaleString()} total</p>
+            )}
+
+            {hasActiveFilters && (
+              <button onClick={handleReset} className="flex items-center gap-1.5 h-9 px-3 mono text-[11px] text-stone-500 hover:text-red-500 hover:bg-red-50 border border-stone-200 hover:border-red-200 rounded-xl transition-colors shrink-0">
+                <SlidersHorizontal size={11} /> Reset
+              </button>
+            )}
           </div>
-
-          {!loading && (
-            <p className="mono text-[11px] text-stone-400 ml-auto">{total.toLocaleString()} total</p>
-          )}
-
-          {hasActiveFilters && (
-            <button onClick={handleReset} className="flex items-center gap-1.5 h-9 px-3 mono text-[11px] text-stone-500 hover:text-red-500 hover:bg-red-50 border border-stone-200 hover:border-red-200 rounded-xl transition-colors">
-              <SlidersHorizontal size={11} /> Reset
-            </button>
-          )}
         </div>
       </div>
 
@@ -634,7 +661,7 @@ function FamilyTransactions({ family }: { family: FamilyWithMembers }) {
           ))}
         </div>
       ) : transactions.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-stone-200 p-12 text-center">
+        <div className="bg-white rounded-2xl border border-stone-200 p-10 sm:p-12 text-center">
           <ArrowLeftRight size={28} className="text-stone-200 mx-auto mb-3" />
           <p className="text-[14px] font-medium text-stone-600">
             {debouncedSearch ? "No results found" : "No shared transactions yet"}
@@ -656,7 +683,7 @@ function FamilyTransactions({ family }: { family: FamilyWithMembers }) {
               const Icon       = isIncome ? TrendingUp : isExpense ? TrendingDown : ArrowLeftRight
               const iconColor  = isIncome ? "text-emerald-600 bg-emerald-50" : isExpense ? "text-red-500 bg-red-50" : "text-sky-600 bg-sky-50"
               return (
-                <div key={t.id} className="flex items-center gap-3 px-5 py-3.5 border-b border-stone-50 last:border-0 hover:bg-stone-50/50 transition-colors">
+                <div key={t.id} className="flex items-center gap-3 px-4 sm:px-5 py-3.5 border-b border-stone-50 last:border-0 hover:bg-stone-50/50 transition-colors">
                   <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", iconColor)}>
                     <Icon size={15} />
                   </div>
@@ -664,7 +691,7 @@ function FamilyTransactions({ family }: { family: FamilyWithMembers }) {
                     <p className="text-[13px] font-medium text-stone-800 truncate">
                       {t.note || t.category || t.type}
                     </p>
-                    <div className="flex items-center gap-1.5 mt-0.5">
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                       <p className="mono text-[10px] text-stone-400">{t.account?.name}</p>
                       {isTransfer && t.to_account?.name && (
                         <>

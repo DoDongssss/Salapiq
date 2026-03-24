@@ -1,8 +1,9 @@
-import { User, Shield, Bell, Sparkles, Trash2 } from "lucide-react"
+import { User, Shield, Bell, Sparkles, Trash2, Archive } from "lucide-react"
 import type { NotificationPrefs } from "@/types"
 
 export const SETTINGS_TABS = [
   { id: "profile",     icon: User,     label: "Profile"      },
+  { id: "Category",     icon: Archive, label: "Categories"  },
   { id: "security",    icon: Shield,   label: "Security"     },
   { id: "preferences", icon: Bell,     label: "Preferences"  },
   { id: "ai",          icon: Sparkles, label: "AI & Privacy" },

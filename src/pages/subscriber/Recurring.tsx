@@ -175,7 +175,7 @@ export default function Recurring() {
   return (
     <div className="page-reveal">
 
-      <div className="flex items-end justify-between mb-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-stone-900 tracking-tight">Recurring</h1>
           <p className="mono text-[11px] text-stone-400 mt-1">
@@ -184,13 +184,13 @@ export default function Recurring() {
         </div>
         <Button
           onClick={openCreate}
-          className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-4"
+          className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-4 w-full sm:w-auto"
         >
           <Plus size={13} /> Add recurring
         </Button>
       </div>
 
-      <div className="flex items-start gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 mb-6">
+      <div className="flex items-start gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl px-4 sm:px-5 py-4 mb-6">
         <RefreshCw size={14} className="text-emerald-600 shrink-0 mt-0.5" />
         <div>
           <p className="text-[13px] font-medium text-emerald-800">Runs automatically every day at midnight</p>
@@ -207,7 +207,7 @@ export default function Recurring() {
           ))}
         </div>
       ) : entries.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-stone-200 p-14 text-center">
+        <div className="bg-white rounded-2xl border border-stone-200 p-10 sm:p-14 text-center">
           <RefreshCw size={32} className="text-stone-200 mx-auto mb-3" />
           <p className="text-[14px] font-medium text-stone-600">No recurring entries yet</p>
           <p className="mono text-[11px] text-stone-400 mt-1 mb-5">
@@ -215,7 +215,7 @@ export default function Recurring() {
           </p>
           <Button
             onClick={openCreate}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-4"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-4 w-full sm:w-auto"
           >
             <Plus size={13} className="mr-1" /> Add your first entry
           </Button>
@@ -253,11 +253,16 @@ export default function Recurring() {
 
       {showModal && (
         <div
-          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4"
           onClick={(e) => e.target === e.currentTarget && setShowModal(false)}
         >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-y-auto max-h-[90vh]">
-            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-stone-100">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-sm overflow-y-auto max-h-[92vh] sm:max-h-[90vh]">
+
+            <div className="flex justify-center pt-3 pb-1 sm:hidden">
+              <div className="w-8 h-1 bg-stone-200 rounded-full" />
+            </div>
+
+            <div className="flex items-center justify-between px-5 sm:px-6 pt-4 sm:pt-6 pb-4 border-b border-stone-100">
               <h2 className="text-[15px] font-semibold text-stone-900">
                 {editEntry ? "Edit recurring" : "Add recurring entry"}
               </h2>
@@ -269,7 +274,7 @@ export default function Recurring() {
               </button>
             </div>
 
-            <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 py-5 flex flex-col gap-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="px-5 sm:px-6 py-5 flex flex-col gap-4">
 
               <div className="flex gap-1 p-1 bg-stone-100 rounded-xl">
                 {(["income", "expense"] as const).map((t) => (
@@ -351,14 +356,14 @@ export default function Recurring() {
                 <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">
                   Reminder days before
                 </Label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-none">
                   {[1, 2, 3, 5, 7].map((d) => (
                     <button
                       key={d}
                       type="button"
                       onClick={() => form.setValue("reminder_days", d)}
                       className={cn(
-                        "flex-1 h-9 mono text-[11px] rounded-xl border transition-all",
+                        "flex-1 min-w-[40px] h-9 mono text-[11px] rounded-xl border transition-all shrink-0",
                         watchReminderDays === d
                           ? "bg-emerald-50 border-emerald-400 text-emerald-700"
                           : "bg-stone-50 border-stone-200 text-stone-500 hover:border-stone-300"
@@ -399,12 +404,12 @@ export default function Recurring() {
                 />
               </div>
 
-              <div className="flex gap-2 justify-end pt-2">
+              <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end pt-2">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setShowModal(false)}
-                  className="text-[12px] h-9 border-stone-200 text-stone-600"
+                  className="text-[12px] h-9 border-stone-200 text-stone-600 w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
@@ -412,7 +417,7 @@ export default function Recurring() {
                   type="submit"
                   disabled={form.formState.isSubmitting}
                   className={cn(
-                    "text-white text-[12px] h-9 px-5",
+                    "text-white text-[12px] h-9 px-5 w-full sm:w-auto",
                     watchType === "income"
                       ? "bg-emerald-600 hover:bg-emerald-700"
                       : "bg-red-500 hover:bg-red-600"
@@ -462,7 +467,7 @@ function EntryGroup({
             <div
               key={e.id}
               className={cn(
-                "flex items-center gap-3 px-5 py-4 border-b border-stone-50 last:border-0",
+                "flex items-center gap-3 px-4 sm:px-5 py-4 border-b border-stone-50 last:border-0",
                 !e.is_active && "opacity-50"
               )}
             >
@@ -480,7 +485,7 @@ function EntryGroup({
                 <p className="text-[13px] font-medium text-stone-800 truncate">
                   {e.note ?? e.category ?? (isIncome ? "Income" : "Expense")}
                 </p>
-                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                   <AccIcon size={9} className="text-stone-400" />
                   <p className="mono text-[10px] text-stone-400">{e.account?.name}</p>
                   <span className="text-stone-200">·</span>
@@ -498,13 +503,19 @@ function EntryGroup({
               </div>
 
               <p className={cn(
-                "mono text-[13px] font-semibold shrink-0",
+                "mono text-[13px] font-semibold shrink-0 hidden xs:block",
                 isIncome ? "text-emerald-600" : "text-red-500"
               )}>
                 {isIncome ? "+" : "−"}₱{e.amount.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
               </p>
 
               <div className="flex items-center gap-1 shrink-0">
+                <p className={cn(
+                  "mono text-[12px] font-semibold mr-1 xs:hidden",
+                  isIncome ? "text-emerald-600" : "text-red-500"
+                )}>
+                  {isIncome ? "+" : "−"}₱{e.amount.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                </p>
                 <button
                   onClick={() => onToggle(e)}
                   disabled={toggling === e.id}
