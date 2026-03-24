@@ -80,16 +80,16 @@ export default function Dashboard() {
     [notifications]
   )
 
-  const overCount   = budgets.filter((b) => Number(b.percent_used) >= 100).length
-  const topBudgets  = [...budgets].sort((a, b) => Number(b.spent) - Number(a.spent)).slice(0, 4)
+  const overCount  = budgets.filter((b) => Number(b.percent_used) >= 100).length
+  const topBudgets = [...budgets].sort((a, b) => Number(b.spent) - Number(a.spent)).slice(0, 4)
 
   return (
     <div className="page-reveal">
 
-      <div className="flex items-end justify-between mb-7">
+      <div className="flex items-end justify-between mb-5 sm:mb-7">
         <div>
           <p className="mono text-[11px] text-stone-400 mb-1 tracking-wide">{getGreeting()}</p>
-          <h1 className="text-[28px] font-semibold text-stone-900 tracking-tight leading-none">
+          <h1 className="text-[22px] sm:text-[28px] font-semibold text-stone-900 tracking-tight leading-none">
             {firstName} 👋
           </h1>
           <p className="mono text-[11px] text-stone-400 mt-1.5">{CURRENT_MONTH} {CURRENT_YEAR}</p>
@@ -102,15 +102,15 @@ export default function Dashboard() {
         )}
       </div>
 
-      <div className="relative rounded-3xl overflow-hidden mb-5 border border-stone-200">
+      <div className="relative rounded-3xl overflow-hidden mb-4 sm:mb-5 border border-stone-200">
         <div className="absolute inset-0 bg-gradient-to-br from-stone-50 via-white to-emerald-50/40" />
         <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-emerald-100/30 -translate-y-1/2 translate-x-1/3 blur-3xl" />
         <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-stone-200/20 translate-y-1/2 -translate-x-1/4 blur-2xl" />
-        <div className="relative p-6">
+        <div className="relative p-4 sm:p-6">
           <div className="flex items-start justify-between">
             <div>
               <p className="mono text-[10px] tracking-[0.18em] uppercase text-stone-400 mb-2">Total balance</p>
-              <p className="text-[40px] font-semibold text-stone-900 tracking-tight leading-none">
+              <p className="text-[28px] sm:text-[40px] font-semibold text-stone-900 tracking-tight leading-none">
                 ₱{balance.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
               </p>
               <p className="mono text-[11px] text-stone-400 mt-2">
@@ -118,13 +118,13 @@ export default function Dashboard() {
               </p>
             </div>
             <div className="flex flex-col items-end gap-2 pt-1">
-              <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-1.5">
+              <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-xl px-2.5 sm:px-3 py-1.5">
                 <TrendingUp size={11} className="text-emerald-600" />
                 <span className="mono text-[11px] text-emerald-700 font-medium">
                   +₱{summary.income.toLocaleString("en-PH", { minimumFractionDigits: 0 })}
                 </span>
               </div>
-              <div className="flex items-center gap-1.5 bg-red-50 border border-red-200 rounded-xl px-3 py-1.5">
+              <div className="flex items-center gap-1.5 bg-red-50 border border-red-200 rounded-xl px-2.5 sm:px-3 py-1.5">
                 <TrendingDown size={11} className="text-red-500" />
                 <span className="mono text-[11px] text-red-600 font-medium">
                   -₱{summary.expenses.toLocaleString("en-PH", { minimumFractionDigits: 0 })}
@@ -132,7 +132,7 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          <div className="mt-5 pt-5 border-t border-stone-200/60">
+          <div className="mt-4 sm:mt-5 pt-4 sm:pt-5 border-t border-stone-200/60">
             <div className="flex items-center justify-between mb-2">
               <p className="mono text-[10px] text-stone-400">Monthly net</p>
               <div className="flex items-center gap-1">
@@ -162,7 +162,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-5">
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-4 mb-4 sm:mb-5">
         <MiniCard label="Income"   value={summary.income}   color="emerald" icon={TrendingUp}  />
         <MiniCard label="Expenses" value={summary.expenses} color="red"     icon={TrendingDown} />
         <MiniCard
@@ -174,9 +174,9 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
 
-        <div className="col-span-2 flex flex-col gap-5">
+        <div className="md:col-span-2 flex flex-col gap-4 sm:gap-5">
 
           <Section
             title="Budget"
@@ -227,7 +227,7 @@ export default function Dashboard() {
                           </div>
                           <p className={cn(
                             "mono text-[11px] font-medium",
-                            status === "over"    ? "text-red-500"
+                            status === "over"      ? "text-red-500"
                             : status === "warning" ? "text-amber-600"
                             : "text-stone-500"
                           )}>
@@ -269,19 +269,19 @@ export default function Dashboard() {
                 action={{ label: "Add account", onClick: () => navigate("/app/accounts") }}
               />
             ) : (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
                 {accounts.slice(0, 4).map((a) => {
                   const Icon     = ACCOUNT_ICONS[a.type] ?? Wallet
                   const sharePct = balance > 0 ? Math.round((a.balance / balance) * 100) : 0
                   return (
-                    <div key={a.id} className="bg-stone-50 rounded-xl p-3.5 border border-stone-100">
+                    <div key={a.id} className="bg-stone-50 rounded-xl p-3 sm:p-3.5 border border-stone-100">
                       <div className="flex items-center gap-2 mb-2">
                         <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: a.color + "22" }}>
                           <Icon size={13} style={{ color: a.color }} />
                         </div>
                         <p className="text-[12px] font-medium text-stone-700 truncate">{a.name}</p>
                       </div>
-                      <p className="mono text-[14px] font-semibold text-stone-900">
+                      <p className="mono text-[13px] sm:text-[14px] font-semibold text-stone-900">
                         ₱{a.balance.toLocaleString("en-PH", { minimumFractionDigits: 0 })}
                       </p>
                       <div className="mt-2 h-1 bg-stone-200 rounded-full overflow-hidden">
@@ -348,7 +348,7 @@ export default function Dashboard() {
               sub={`${family.members.length} member${family.members.length !== 1 ? "s" : ""} · ${family.name}`}
               action={{ label: "View", onClick: () => navigate("/app/family") }}
             >
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="flex -space-x-2">
                   {family.members.slice(0, 6).map((m) => (
                     <div key={m.id} title={m.profile?.full_name ?? ""} className="w-9 h-9 rounded-full bg-emerald-100 border-2 border-white flex items-center justify-center overflow-hidden">
@@ -377,10 +377,10 @@ export default function Dashboard() {
           )}
         </div>
 
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-4 sm:gap-5">
 
           <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] overflow-hidden">
-            <div className="flex items-center gap-2.5 px-5 py-4 border-b border-stone-50">
+            <div className="flex items-center gap-2.5 px-4 sm:px-5 py-4 border-b border-stone-50">
               <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-violet-100 to-violet-200 flex items-center justify-center">
                 <Sparkles size={13} className="text-violet-600" />
               </div>
@@ -390,11 +390,18 @@ export default function Dashboard() {
               </div>
               <span className="mono text-[9px] bg-violet-50 text-violet-600 border border-violet-200 px-1.5 py-0.5 rounded-full">Beta</span>
             </div>
-            <div className="divide-y divide-stone-50">
+            <div className="flex md:flex-col overflow-x-auto md:overflow-x-visible md:divide-y md:divide-stone-50 scrollbar-none">
               {insights.map((insight) => {
                 const Icon = insight.icon
                 return (
-                  <div key={insight.id} className="px-5 py-4 hover:bg-stone-50/60 transition-colors">
+                  <div
+                    key={insight.id}
+                    className={cn(
+                      "px-4 sm:px-5 py-4 hover:bg-stone-50/60 transition-colors",
+                      "shrink-0 w-[72vw] sm:w-[52vw] md:w-auto",
+                      "border-r md:border-r-0 border-stone-50 last:border-0"
+                    )}
+                  >
                     <div className="flex items-start gap-3">
                       <div className={cn("w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 mt-0.5", insight.color)}>
                         <Icon size={12} />
@@ -408,7 +415,7 @@ export default function Dashboard() {
                 )
               })}
             </div>
-            <div className="px-5 py-3 border-t border-stone-50">
+            <div className="px-4 sm:px-5 py-3 border-t border-stone-50">
               <button onClick={() => navigate("/app/ai-classify")} className="w-full mono text-[10px] text-stone-400 hover:text-violet-600 transition-colors flex items-center justify-center gap-1.5">
                 <Sparkles size={10} /> Open AI Classify <ChevronRight size={10} />
               </button>
@@ -416,7 +423,7 @@ export default function Dashboard() {
           </div>
 
           {topBudgets.length > 0 && (
-            <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-5">
+            <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-4 sm:p-5">
               <p className="text-[13px] font-semibold text-stone-900 mb-4">Top spending</p>
               <div className="flex flex-col gap-2.5">
                 {topBudgets.map((b) => {
@@ -447,7 +454,7 @@ export default function Dashboard() {
 
           {recentNotifs.length > 0 && (
             <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-stone-50">
+              <div className="flex items-center justify-between px-4 sm:px-5 py-4 border-b border-stone-50">
                 <p className="text-[13px] font-semibold text-stone-900">Alerts</p>
                 <span className="mono text-[9px] bg-red-50 text-red-500 border border-red-200 px-1.5 py-0.5 rounded-full">
                   {recentNotifs.length} unread
@@ -455,7 +462,7 @@ export default function Dashboard() {
               </div>
               <div className="divide-y divide-stone-50">
                 {recentNotifs.map((n) => (
-                  <div key={n.id} className="px-5 py-3.5 hover:bg-stone-50/50 transition-colors">
+                  <div key={n.id} className="px-4 sm:px-5 py-3.5 hover:bg-stone-50/50 transition-colors">
                     <p className="text-[12px] font-medium text-stone-800 leading-tight">{n.title}</p>
                     <p className="mono text-[10px] text-stone-400 mt-0.5 line-clamp-2 leading-relaxed">{n.message}</p>
                   </div>
@@ -466,7 +473,7 @@ export default function Dashboard() {
 
           <button
             onClick={() => navigate("/app/transactions")}
-            className="w-full bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-5 flex items-center justify-between hover:border-emerald-300 hover:shadow-[0_4px_24px_rgba(16,185,129,0.08)] transition-all group"
+            className="w-full bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-4 sm:p-5 flex items-center justify-between hover:border-emerald-300 hover:shadow-[0_4px_24px_rgba(16,185,129,0.08)] transition-all group active:scale-[0.99]"
           >
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
@@ -496,17 +503,17 @@ function MiniCard({ label, value, color, icon: Icon, sub }: {
   }
   const c = colors[color]
   return (
-    <div className={cn("bg-white rounded-2xl border-t-2 border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-4", c.border)}>
-      <div className="flex items-center gap-2 mb-2.5">
+    <div className={cn("bg-white rounded-2xl border-t-2 border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-3 sm:p-4", c.border)}>
+      <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-2.5">
         <div className={cn("w-6 h-6 rounded-lg flex items-center justify-center", c.bg)}>
           <Icon size={12} className={c.text} />
         </div>
-        <p className="mono text-[10px] text-stone-400 uppercase tracking-[0.1em]">{label}</p>
+        <p className="mono text-[9px] sm:text-[10px] text-stone-400 uppercase tracking-[0.1em]">{label}</p>
       </div>
-      <p className={cn("text-[17px] font-semibold tracking-tight", c.text)}>
+      <p className={cn("text-[14px] sm:text-[17px] font-semibold tracking-tight", c.text)}>
         ₱{value.toLocaleString("en-PH", { minimumFractionDigits: 0 })}
       </p>
-      <p className="mono text-[9px] text-stone-400 mt-0.5">{sub ?? "this month"}</p>
+      <p className="mono text-[9px] text-stone-400 mt-0.5 truncate">{sub ?? "this month"}</p>
     </div>
   )
 }
@@ -516,8 +523,8 @@ function Section({ title, sub, subColor, action, children }: {
   action?: { label: string; onClick: () => void }; children: React.ReactNode
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-5">
-      <div className="flex items-start justify-between mb-4">
+    <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-4 sm:p-5">
+      <div className="flex items-start justify-between mb-3 sm:mb-4">
         <div>
           <p className="text-[14px] font-semibold text-stone-900">{title}</p>
           {sub && <p className={cn("mono text-[10px] mt-0.5", subColor ?? "text-stone-400")}>{sub}</p>}

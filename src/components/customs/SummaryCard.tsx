@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils"
+import { cn, formatCurrency } from "@/lib/utils"
 
 type SummaryCardProps = {
   label:      string
@@ -24,8 +24,12 @@ export default function SummaryCard({
       <p className="mono text-[10px] uppercase tracking-[0.12em] text-stone-400 mb-2">
         {label}
       </p>
-      <p className={cn("text-[22px] font-semibold tracking-tight", valueClass)}>
-        {currency}{Math.abs(value).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+      <p className={cn(
+        "font-semibold tracking-tight tabular-nums",
+        "text-lg sm:text-xl md:text-2xl lg:text-[26px]",
+        valueClass
+      )}>
+        {formatCurrency(value, currency)}
       </p>
     </div>
   )
