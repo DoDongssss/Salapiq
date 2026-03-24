@@ -1,5 +1,5 @@
 import { cn, formatCurrency } from "@/lib/utils"
-import { LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 type SummaryCardProps = {
   label:      string
