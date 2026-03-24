@@ -284,7 +284,7 @@ export default function Budget() {
                 <div className="mt-2 pt-2 border-t border-stone-50 flex items-center justify-between">
                   <p className="mono text-[10px] text-stone-400">
                     {status === "over"
-                      ? `${formatCurrency(Math.abs(Number(b.remainin )), '₱')} over`
+                      ? `${formatCurrency(Math.abs(Number(<b className="remaining"></b> )), '₱')} over`
                       : `${formatCurrency(Number(b.remaining), '₱')} left`
                     }
                   </p>
