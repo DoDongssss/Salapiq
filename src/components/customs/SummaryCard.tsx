@@ -1,5 +1,5 @@
 import { cn, formatCurrency } from "@/lib/utils"
-import type { SVGProps } from "react"
+import { LucideIcon } from 'lucide-react';
 
 type SummaryCardProps = {
   label:      string
@@ -7,7 +7,7 @@ type SummaryCardProps = {
   currency?:  string
   color:      "emerald" | "red" | "sky"
   sub?:       string | null
-  Icon?:      React.ComponentType<SVGProps<SVGSVGElement>>
+  Icon?:      LucideIcon
 }
 
 export default function SummaryCard({
