@@ -26,7 +26,7 @@ import {
   Camera, CheckCircle2, Clock, Mail, Phone,
   Globe, DollarSign, ChevronRight, Shield,
   Palette, Languages as LanguagesIcon, CalendarDays,
-  AlertCircle,
+  AlertCircle, ChevronDown,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -54,6 +54,7 @@ export default function Settings() {
   const updateAiOptIn   = useSettingStore((s) => s.updateAiOptIn)
 
   const [activeTab,         setActiveTab]         = useState("profile")
+  const [mobileNavOpen,     setMobileNavOpen]     = useState(false)
   const [localAvatarUrl,    setLocalAvatarUrl]    = useState<string | null>(null)
   const [uploadingAvatar,   setUploadingAvatar]   = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -204,6 +205,13 @@ export default function Settings() {
   const displayUrl = localAvatarUrl ?? getAvatarUrl()
   const initials   = (profile?.full_name || user?.email || "SA").slice(0, 2).toUpperCase()
 
+  const activeTabLabel = SETTINGS_TABS.find((t) => t.id === activeTab)?.label ?? "Settings"
+
+  const handleTabChange = (id: string) => {
+    setActiveTab(id)
+    setMobileNavOpen(false)
+  }
+
   return (
     <div className="page-reveal">
       <div className="mb-7">
@@ -211,9 +219,46 @@ export default function Settings() {
         <p className="mono text-[11px] text-stone-400 mt-1">Manage your account, preferences and privacy</p>
       </div>
 
+      <div className="lg:hidden mb-4">
+        <button
+          onClick={() => setMobileNavOpen((v) => !v)}
+          className="w-full flex items-center justify-between px-4 py-3 bg-white border border-stone-200 rounded-2xl shadow-sm text-[13px] font-medium text-stone-800"
+        >
+          <span className="flex items-center gap-2">
+            {(() => {
+              const tab = SETTINGS_TABS.find((t) => t.id === activeTab)
+              const Icon = tab?.icon
+              return Icon ? <Icon size={14} className="text-stone-500" /> : null
+            })()}
+            {activeTabLabel}
+          </span>
+          <ChevronDown size={14} className={cn("text-stone-400 transition-transform", mobileNavOpen && "rotate-180")} />
+        </button>
+        {mobileNavOpen && (
+          <div className="mt-1 bg-white border border-stone-200 rounded-2xl shadow-lg overflow-hidden">
+            <div className="p-2">
+              {SETTINGS_TABS.map(({ id, icon: Icon, label }) => (
+                <button
+                  key={id}
+                  onClick={() => handleTabChange(id)}
+                  className={cn(
+                    "w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-[12px] font-medium transition-all mb-0.5",
+                    activeTab === id
+                      ? id === "danger" ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-700"
+                      : "text-stone-500 hover:text-stone-800 hover:bg-stone-50"
+                  )}
+                >
+                  <Icon size={13} />{label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="flex gap-6">
 
-        <div className="w-52 shrink-0">
+        <div className="hidden lg:block w-52 shrink-0">
           <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
             <div className="px-5 pt-6 pb-5 border-b border-stone-50 flex flex-col items-center">
               <div className="relative mb-3">
@@ -273,34 +318,34 @@ export default function Settings() {
           {activeTab === "profile" && (
             <div className="flex flex-col gap-5">
               {!isVerified && (
-                <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4">
                   <AlertCircle size={16} className="text-amber-500 shrink-0" />
                   <div className="flex-1">
                     <p className="text-[13px] font-medium text-amber-800">Email not verified</p>
                     <p className="mono text-[11px] text-amber-600 mt-0.5">Verify your email to unlock all features.</p>
                   </div>
-                  <Button onClick={handleResendVerification} className="shrink-0 h-8 px-3 text-[11px] bg-amber-500 hover:bg-amber-600 text-white">
+                  <Button onClick={handleResendVerification} className="shrink-0 h-8 px-3 text-[11px] bg-amber-500 hover:bg-amber-600 text-white w-full sm:w-auto">
                     Send verification
                   </Button>
                 </div>
               )}
-              <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6">
+              <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-5 sm:p-6">
                 <h2 className="text-[14px] font-semibold text-stone-900 mb-5">Personal information</h2>
                 {!profileInitialized || profileLoading ? (
                   <div className="flex flex-col gap-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="flex flex-col gap-1.5"><div className="h-3 w-16 bg-stone-100 rounded animate-pulse" /><FieldSkeleton /></div>
                       <div className="flex flex-col gap-1.5"><div className="h-3 w-16 bg-stone-100 rounded animate-pulse" /><FieldSkeleton /></div>
                     </div>
                     <div className="flex flex-col gap-1.5"><div className="h-3 w-20 bg-stone-100 rounded animate-pulse" /><FieldSkeleton /></div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="flex flex-col gap-1.5"><div className="h-3 w-20 bg-stone-100 rounded animate-pulse" /><FieldSkeleton /></div>
                       <div className="flex flex-col gap-1.5"><div className="h-3 w-20 bg-stone-100 rounded animate-pulse" /><FieldSkeleton /></div>
                     </div>
                   </div>
                 ) : (
                   <form onSubmit={profileForm.handleSubmit(onSaveProfile)} className="flex flex-col gap-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="flex flex-col gap-1.5">
                         <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400">Full name</Label>
                         <Input placeholder="Juan dela Cruz" className={cn("h-10 text-sm bg-stone-50 border-stone-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20", profileForm.formState.errors.full_name && "border-red-300")} {...profileForm.register("full_name")} />
@@ -319,7 +364,7 @@ export default function Settings() {
                       <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400"><Phone size={10} className="inline mr-1" />Phone number</Label>
                       <Input placeholder="+63 9XX XXX XXXX" className="h-10 text-sm bg-stone-50 border-stone-200 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20" {...profileForm.register("phone")} />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="flex flex-col gap-1.5">
                         <Label className="mono text-[10px] tracking-[0.12em] uppercase text-stone-400"><DollarSign size={10} className="inline mr-1" />Monthly income</Label>
                         <div className="relative">
@@ -335,7 +380,7 @@ export default function Settings() {
                       {TIMEZONES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                     </SettingsSelect>
                     <div className="flex justify-end pt-2">
-                      <Button type="submit" disabled={profileForm.formState.isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-5">
+                      <Button type="submit" disabled={profileForm.formState.isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-5 w-full sm:w-auto">
                         {profileForm.formState.isSubmitting
                           ? <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />Saving</span>
                           : "Save changes"
@@ -350,7 +395,7 @@ export default function Settings() {
 
           {activeTab === "security" && (
             <div className="flex flex-col gap-5">
-              <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6">
+              <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-5 sm:p-6">
                 <div className="mb-5">
                   <h2 className="text-[14px] font-semibold text-stone-900">Email address</h2>
                   <p className="mono text-[11px] text-stone-400 mt-1 flex items-center gap-1.5 flex-wrap">
@@ -368,17 +413,17 @@ export default function Settings() {
                     {emailForm.formState.errors.email && <p className="mono text-[10px] text-red-400">— {emailForm.formState.errors.email.message}</p>}
                   </div>
                   <div className="flex justify-end">
-                    <Button type="submit" disabled={emailForm.formState.isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-5">
+                    <Button type="submit" disabled={emailForm.formState.isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-5 w-full sm:w-auto">
                       Update email
                     </Button>
                   </div>
                 </form>
               </div>
 
-              <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6">
+              <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-5 sm:p-6">
                 <h2 className="text-[14px] font-semibold text-stone-900 mb-1">Password</h2>
                 <p className="mono text-[11px] text-stone-400 mb-5">We'll send a reset link to <span className="text-stone-600">{user?.email}</span></p>
-                <Button onClick={handlePasswordReset} disabled={sendingReset} variant="outline" className="text-[12px] h-9 border-stone-200 text-stone-600 hover:border-emerald-400 hover:text-emerald-600">
+                <Button onClick={handlePasswordReset} disabled={sendingReset} variant="outline" className="text-[12px] h-9 border-stone-200 text-stone-600 hover:border-emerald-400 hover:text-emerald-600 w-full sm:w-auto">
                   {sendingReset
                     ? <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full border-2 border-stone-300 border-t-stone-600 animate-spin" />Sending</span>
                     : "Send password reset email"
@@ -386,20 +431,20 @@ export default function Settings() {
                 </Button>
               </div>
 
-              <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6">
+              <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-5 sm:p-6">
                 <h2 className="text-[14px] font-semibold text-stone-900 mb-4">Active session</h2>
-                <div className="flex items-center gap-3 bg-stone-50 rounded-xl p-4">
+                <div className="flex items-start sm:items-center gap-3 bg-stone-50 rounded-xl p-4">
                   <div className="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
                     <Shield size={15} className="text-emerald-600" />
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <p className="text-[12px] font-medium text-stone-800">Current browser session</p>
-                    <p className="mono text-[10px] text-stone-400 mt-0.5">Signed in as {user?.email}</p>
+                    <p className="mono text-[10px] text-stone-400 mt-0.5 truncate">Signed in as {user?.email}</p>
                     <p className="mono text-[10px] text-stone-400 mt-0.5">
                       Last active: {new Date().toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}
                     </p>
                   </div>
-                  <span className="mono text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded-full">Active</span>
+                  <span className="mono text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0">Active</span>
                 </div>
               </div>
             </div>
@@ -407,12 +452,12 @@ export default function Settings() {
 
           {activeTab === "preferences" && (
             <div className="flex flex-col gap-5">
-              <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6">
+              <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-5 sm:p-6">
                 <h2 className="text-[14px] font-semibold text-stone-900 mb-5">Notifications</h2>
                 <div className="flex flex-col">
                   {NOTIFICATION_ROWS.map(({ key, label, desc }) => (
-                    <div key={key} className="flex items-center justify-between py-4 border-b border-stone-50 last:border-0">
-                      <div>
+                    <div key={key} className="flex items-center justify-between py-4 border-b border-stone-50 last:border-0 gap-4">
+                      <div className="min-w-0">
                         <p className="text-[13px] text-stone-800">{label}</p>
                         <p className="mono text-[10px] text-stone-400 mt-0.5">{desc}</p>
                       </div>
@@ -424,7 +469,7 @@ export default function Settings() {
                   ))}
                 </div>
                 <div className="flex justify-end mt-4">
-                  <Button onClick={handleSaveNotifications} disabled={savingNotifs} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-5">
+                  <Button onClick={handleSaveNotifications} disabled={savingNotifs} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-5 w-full sm:w-auto">
                     {savingNotifs
                       ? <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />Saving</span>
                       : "Save notifications"
@@ -433,10 +478,10 @@ export default function Settings() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6">
+              <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-5 sm:p-6">
                 <h2 className="text-[14px] font-semibold text-stone-900 mb-5">App preferences</h2>
                 <div className="flex flex-col gap-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <SettingsSelect label="Theme" icon={Palette} value={localTheme} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setLocalTheme(e.target.value)}>
                       {THEMES.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
                     </SettingsSelect>
@@ -449,7 +494,7 @@ export default function Settings() {
                   </SettingsSelect>
                 </div>
                 <div className="flex justify-end mt-4">
-                  <Button onClick={handleSaveAppPrefs} disabled={savingPrefs} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-5">
+                  <Button onClick={handleSaveAppPrefs} disabled={savingPrefs} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-5 w-full sm:w-auto">
                     {savingPrefs
                       ? <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />Saving</span>
                       : "Save preferences"
@@ -462,16 +507,16 @@ export default function Settings() {
 
           {activeTab === "ai" && (
             <div className="flex flex-col gap-5">
-              <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6">
-                <div className="flex items-center gap-2 mb-1">
+              <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-5 sm:p-6">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <h2 className="text-[14px] font-semibold text-stone-900">AI expense classification</h2>
                   <span className="mono text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded-full">Privacy-first</span>
                 </div>
                 <p className="mono text-[11px] text-stone-400 mb-5 leading-relaxed">
                   Salapiq's AI runs entirely in your browser using Transformers.js. Your expense data is never sent to any server.
                 </p>
-                <div className="flex items-center justify-between py-4 border-t border-stone-50">
-                  <div>
+                <div className="flex items-center justify-between py-4 border-t border-stone-50 gap-4">
+                  <div className="min-w-0">
                     <p className="text-[13px] text-stone-800">Enable AI classification</p>
                     <p className="mono text-[10px] text-stone-400 mt-0.5">Auto-suggest categories when you add expenses</p>
                   </div>
@@ -479,7 +524,7 @@ export default function Settings() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6">
+              <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-5 sm:p-6">
                 <h2 className="text-[14px] font-semibold text-stone-900 mb-4">How your data is used</h2>
                 {PRIVACY_ROWS.map(({ icon, title, desc }) => (
                   <div key={title} className="flex items-start gap-3 py-3.5 border-b border-stone-50 last:border-0">
@@ -492,7 +537,7 @@ export default function Settings() {
                 ))}
               </div>
 
-              <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6">
+              <div className="bg-white rounded-2xl border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-5 sm:p-6">
                 <h2 className="text-[14px] font-semibold text-stone-900 mb-1">Clear AI training data</h2>
                 <p className="mono text-[11px] text-stone-400 mb-4">Removes all your local AI corrections from this browser. The base model remains.</p>
                 <Button
@@ -501,7 +546,7 @@ export default function Settings() {
                     clearLocalAiData()
                     toast({ type: "info", title: "AI data cleared", description: "Your local corrections have been removed." })
                   }}
-                  className="text-[12px] h-9 border-stone-200 text-stone-600 hover:border-red-300 hover:text-red-500"
+                  className="text-[12px] h-9 border-stone-200 text-stone-600 hover:border-red-300 hover:text-red-500 w-full sm:w-auto"
                 >
                   Clear local AI data
                 </Button>
@@ -511,11 +556,11 @@ export default function Settings() {
 
           {activeTab === "danger" && (
             <div className="flex flex-col gap-5">
-              <div className="bg-white rounded-2xl border border-red-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6">
+              <div className="bg-white rounded-2xl border border-red-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-5 sm:p-6">
                 <h2 className="text-[14px] font-semibold text-red-600 mb-1">Danger zone</h2>
                 <p className="mono text-[11px] text-stone-400 mb-5">These actions are irreversible. Please proceed with caution.</p>
 
-                <div className="flex items-center justify-between py-4 border-b border-stone-50">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-4 border-b border-stone-50">
                   <div>
                     <p className="text-[13px] font-medium text-stone-800">Deactivate account</p>
                     <p className="mono text-[10px] text-stone-400 mt-0.5">Temporarily disable your account. You can reactivate anytime.</p>
@@ -523,18 +568,18 @@ export default function Settings() {
                   <Button
                     variant="outline"
                     onClick={() => toast({ type: "warning", title: "Contact support", description: "Email support@salapiq.com to deactivate." })}
-                    className="text-[12px] h-9 border-stone-200 text-stone-600 hover:border-amber-400 hover:text-amber-600 shrink-0"
+                    className="text-[12px] h-9 border-stone-200 text-stone-600 hover:border-amber-400 hover:text-amber-600 shrink-0 w-full sm:w-auto"
                   >
                     Deactivate
                   </Button>
                 </div>
 
-                <div className="flex items-center justify-between py-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-4">
                   <div>
                     <p className="text-[13px] font-medium text-red-600">Delete account</p>
                     <p className="mono text-[10px] text-stone-400 mt-0.5">Permanently delete your account and all data. Cannot be undone.</p>
                   </div>
-                  <Button onClick={() => setShowDeleteConfirm(true)} className="text-[12px] h-9 bg-red-500 hover:bg-red-600 text-white shrink-0">
+                  <Button onClick={() => setShowDeleteConfirm(true)} className="text-[12px] h-9 bg-red-500 hover:bg-red-600 text-white shrink-0 w-full sm:w-auto">
                     Delete account
                   </Button>
                 </div>
@@ -549,21 +594,86 @@ export default function Settings() {
                       onChange={(e) => setDeleteInput(e.target.value)}
                       className="h-9 text-sm bg-white border-red-200 focus-visible:border-red-400 focus-visible:ring-red-400/20 mb-3"
                     />
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <Button
                         onClick={() => {
                           toast({ type: "info", title: "Contact support", description: "Email support@salapiq.com for account deletion." })
                           setShowDeleteConfirm(false)
                         }}
                         disabled={deleteInput !== "DELETE"}
-                        className="text-[12px] h-9 bg-red-500 hover:bg-red-600 text-white disabled:opacity-40"
+                        className="text-[12px] h-9 bg-red-500 hover:bg-red-600 text-white disabled:opacity-40 w-full sm:w-auto"
                       >
                         Permanently delete
                       </Button>
                       <Button
                         variant="outline"
                         onClick={() => { setShowDeleteConfirm(false); setDeleteInput("") }}
-                        className="text-[12px] h-9 border-stone-200 text-stone-600"
+                        className="text-[12px] h-9 border-stone-200 text-stone-600 w-full sm:w-auto"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === "Category" && (
+            <div className="flex flex-col gap-5">
+              <div className="bg-white rounded-2xl border border-red-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-5 sm:p-6">
+                <h2 className="text-[14px] font-semibold text-red-600 mb-1">Category</h2>
+                <p className="mono text-[11px] text-stone-400 mb-5">These actions are irreversible. Please proceed with caution.</p>
+
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-4 border-b border-stone-50">
+                  <div>
+                    <p className="text-[13px] font-medium text-stone-800">Deactivate account</p>
+                    <p className="mono text-[10px] text-stone-400 mt-0.5">Temporarily disable your account. You can reactivate anytime.</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => toast({ type: "warning", title: "Contact support", description: "Email support@salapiq.com to deactivate." })}
+                    className="text-[12px] h-9 border-stone-200 text-stone-600 hover:border-amber-400 hover:text-amber-600 shrink-0 w-full sm:w-auto"
+                  >
+                    Deactivate
+                  </Button>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-4">
+                  <div>
+                    <p className="text-[13px] font-medium text-red-600">Delete account</p>
+                    <p className="mono text-[10px] text-stone-400 mt-0.5">Permanently delete your account and all data. Cannot be undone.</p>
+                  </div>
+                  <Button onClick={() => setShowDeleteConfirm(true)} className="text-[12px] h-9 bg-red-500 hover:bg-red-600 text-white shrink-0 w-full sm:w-auto">
+                    Delete account
+                  </Button>
+                </div>
+
+                {showDeleteConfirm && (
+                  <div className="mt-2 rounded-xl bg-red-50 border border-red-200 p-4">
+                    <p className="text-[13px] font-medium text-red-700 mb-1">Are you absolutely sure?</p>
+                    <p className="mono text-[10px] text-red-500 mb-3">Type <span className="font-medium">DELETE</span> to confirm. This will permanently erase all your data.</p>
+                    <Input
+                      placeholder="Type DELETE to confirm"
+                      value={deleteInput}
+                      onChange={(e) => setDeleteInput(e.target.value)}
+                      className="h-9 text-sm bg-white border-red-200 focus-visible:border-red-400 focus-visible:ring-red-400/20 mb-3"
+                    />
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Button
+                        onClick={() => {
+                          toast({ type: "info", title: "Contact support", description: "Email support@salapiq.com for account deletion." })
+                          setShowDeleteConfirm(false)
+                        }}
+                        disabled={deleteInput !== "DELETE"}
+                        className="text-[12px] h-9 bg-red-500 hover:bg-red-600 text-white disabled:opacity-40 w-full sm:w-auto"
+                      >
+                        Permanently delete
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => { setShowDeleteConfirm(false); setDeleteInput("") }}
+                        className="text-[12px] h-9 border-stone-200 text-stone-600 w-full sm:w-auto"
                       >
                         Cancel
                       </Button>

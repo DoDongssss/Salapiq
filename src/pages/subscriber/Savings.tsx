@@ -10,8 +10,8 @@ import {
 } from "@/config/savings"
 import SavingsCard      from "@/components/customs/SavingsCard"
 import GoalDetailModal  from "@/components/modals/GoalDetailModal"
-import GoalModal      from "@/components/modals/GoalModal"
-import ContributeModal from "@/components/modals/ContributeModal"
+import GoalModal        from "@/components/modals/GoalModal"
+import ContributeModal  from "@/components/modals/ContributeModal"
 import { Plus, PiggyBank } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -77,24 +77,27 @@ export default function Savings() {
   return (
     <div className="page-reveal">
 
-      <div className="flex items-end justify-between mb-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-stone-900 tracking-tight">Savings</h1>
           <p className="mono text-[11px] text-stone-400 mt-1">
             {ov.activeGoals} active · {ov.achievedGoals} achieved
           </p>
         </div>
-        <Button onClick={openCreate} className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-4">
+        <Button
+          onClick={openCreate}
+          className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-4 w-full sm:w-auto"
+        >
           <Plus size={13} /> New goal
         </Button>
       </div>
 
       {!loading && goals.length > 0 && (
-        <div className="bg-[#0f1a12] rounded-2xl p-5 mb-5">
+        <div className="bg-[#0f1a12] rounded-2xl p-4 sm:p-5 mb-5">
           <div className="flex items-start justify-between mb-4">
             <div>
               <p className="mono text-[10px] tracking-[0.15em] uppercase text-emerald-900 mb-1">Total saved</p>
-              <p className="text-3xl font-semibold text-white tracking-tight">
+              <p className="text-2xl sm:text-3xl font-semibold text-white tracking-tight">
                 ₱{ov.totalSaved.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
               </p>
               <p className="mono text-[10px] text-emerald-900 mt-1">
@@ -102,7 +105,7 @@ export default function Savings() {
               </p>
             </div>
             <div className="text-right">
-              <div className="flex items-center gap-2 justify-end mb-1">
+              <div className="flex items-center gap-2 justify-end mb-1 flex-wrap">
                 <span className="mono text-[10px] text-emerald-900">{ov.activeGoals} active</span>
                 <span className="mono text-[10px] text-emerald-900">·</span>
                 <span className="mono text-[10px] text-sky-400">{ov.achievedGoals} achieved</span>
@@ -120,14 +123,14 @@ export default function Savings() {
           </div>
 
           {goals.filter(g => g.status === "active").length > 1 && (
-            <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-2 gap-2">
+            <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-1 sm:grid-cols-2 gap-2">
               {goals.filter(g => g.status === "active").map((g) => {
                 const pct = Math.min(Math.round((g.current_amount / g.target_amount) * 100), 100)
                 return (
                   <div key={g.id}>
                     <div className="flex items-center justify-between mb-1">
                       <p className="mono text-[9px] text-white/50 truncate">{g.title}</p>
-                      <p className="mono text-[9px] text-white/50">{pct}%</p>
+                      <p className="mono text-[9px] text-white/50 shrink-0 ml-2">{pct}%</p>
                     </div>
                     <div className="h-1 bg-white/10 rounded-full overflow-hidden">
                       <div className="h-full bg-emerald-400 rounded-full" style={{ width: `${pct}%` }} />
@@ -141,13 +144,13 @@ export default function Savings() {
       )}
 
       {!loading && goals.length > 0 && (
-        <div className="flex items-center gap-1.5 mb-4">
+        <div className="flex items-center gap-1.5 mb-4 overflow-x-auto pb-1 scrollbar-none">
           {GOAL_STATUS_FILTER.map(({ value, label }) => (
             <button
               key={value}
               onClick={() => setStatusFilter(value)}
               className={cn(
-                "mono text-[11px] px-3 py-1.5 rounded-lg transition-colors",
+                "mono text-[11px] px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap shrink-0",
                 statusFilter === value
                   ? "bg-emerald-50 text-emerald-700"
                   : "text-stone-500 hover:text-stone-700 hover:bg-stone-50"
@@ -160,13 +163,13 @@ export default function Savings() {
       )}
 
       {loading ? (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="h-56 bg-white rounded-2xl border border-stone-200 animate-pulse" />
           ))}
         </div>
       ) : goals.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-stone-200 p-14 text-center">
+        <div className="bg-white rounded-2xl border border-stone-200 p-10 sm:p-14 text-center">
           <div className="w-14 h-14 rounded-2xl bg-stone-100 flex items-center justify-center mx-auto mb-4">
             <PiggyBank size={24} className="text-stone-300" />
           </div>
@@ -174,7 +177,10 @@ export default function Savings() {
           <p className="mono text-[11px] text-stone-400 mt-1.5 mb-5">
             Create a goal and start saving towards something meaningful
           </p>
-          <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-4">
+          <Button
+            onClick={openCreate}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] h-9 px-4 w-full sm:w-auto"
+          >
             <Plus size={13} className="mr-1" /> Create your first goal
           </Button>
         </div>
@@ -186,7 +192,7 @@ export default function Savings() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {filtered.map((goal) => (
             <div key={goal.id} onClick={() => setDetailGoal(goal)} className="cursor-pointer">
               <SavingsCard
