@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 import { useInsights } from "@/hooks/useInsights"
 import { cn } from "@/lib/utils"
+import SummaryCard from "@/components/customs/SummaryCard"
 
 const CURRENT_MONTH = new Date().toLocaleString("en-PH", { month: "long" })
 const CURRENT_YEAR  = new Date().getFullYear()
@@ -163,15 +164,9 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-3 gap-2.5 sm:gap-4 mb-4 sm:mb-5">
-        <MiniCard label="Income"   value={summary.income}   color="emerald" icon={TrendingUp}  />
-        <MiniCard label="Expenses" value={summary.expenses} color="red"     icon={TrendingDown} />
-        <MiniCard
-          label="Savings"
-          value={ov.totalSaved}
-          color="sky"
-          icon={PiggyBank}
-          sub={`${ov.activeGoals} goal${ov.activeGoals !== 1 ? "s" : ""} active`}
-        />
+        <SummaryCard label="Income"   value={summary.income}   color="emerald"  Icon={TrendingUp}  />
+        <SummaryCard label="Expenses" value={summary.expenses} color="red"      Icon={TrendingDown} />
+        <SummaryCard label="Savings" value={ov.totalSaved} color="sky"          Icon={PiggyBank} sub={`${ov.activeGoals} goal${ov.activeGoals !== 1 ? "s" : ""} active`} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
@@ -488,32 +483,6 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
-    </div>
-  )
-}
-
-function MiniCard({ label, value, color, icon: Icon, sub }: {
-  label: string; value: number; color: "emerald" | "red" | "sky"
-  icon: typeof TrendingUp; sub?: string
-}) {
-  const colors = {
-    emerald: { text: "text-emerald-600", bg: "bg-emerald-50", border: "border-t-emerald-400" },
-    red:     { text: "text-red-500",     bg: "bg-red-50",     border: "border-t-red-400"     },
-    sky:     { text: "text-sky-600",     bg: "bg-sky-50",     border: "border-t-sky-400"     },
-  }
-  const c = colors[color]
-  return (
-    <div className={cn("bg-white rounded-2xl border-t-2 border border-stone-200 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-3 sm:p-4", c.border)}>
-      <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-2.5">
-        <div className={cn("w-6 h-6 rounded-lg flex items-center justify-center", c.bg)}>
-          <Icon size={12} className={c.text} />
-        </div>
-        <p className="mono text-[9px] sm:text-[10px] text-stone-400 uppercase tracking-[0.1em]">{label}</p>
-      </div>
-      <p className={cn("text-[14px] sm:text-[17px] font-semibold tracking-tight", c.text)}>
-        ₱{value.toLocaleString("en-PH", { minimumFractionDigits: 0 })}
-      </p>
-      <p className="mono text-[9px] text-stone-400 mt-0.5 truncate">{sub ?? "this month"}</p>
     </div>
   )
 }
