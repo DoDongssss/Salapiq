@@ -1,4 +1,5 @@
 import { cn, formatCurrency } from "@/lib/utils"
+import type { SVGProps } from "react"
 
 type SummaryCardProps = {
   label:      string
