@@ -17,10 +17,13 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
+type TransactionType = "expense" | "income" | "transfer"
+
 type Props = {
-  open:     boolean
-  onClose:  () => void
-  onAdded?: () => void
+  open:             boolean
+  onClose:          () => void
+  onAdded?:         () => void
+  transactionType?: TransactionType  
 }
 
 const TYPE_TABS = [
@@ -29,7 +32,7 @@ const TYPE_TABS = [
   { value: "transfer", label: "Transfer", icon: ArrowLeftRight },
 ] as const
 
-export default function AddExpenseModal({ open, onClose, onAdded }: Props) {
+export default function AddExpenseModal({ open, onClose, onAdded, transactionType }: Props) {
   const { user }  = useAuth()
   const { toast } = useToast()
 
@@ -42,7 +45,7 @@ export default function AddExpenseModal({ open, onClose, onAdded }: Props) {
     defaultValues: {
       account_id:    "",
       amount:        undefined,
-      type:          "expense",
+      type:          transactionType ?? "expense",
       category:      "",
       note:          "",
       date:          new Date().toISOString().split("T")[0],
@@ -53,6 +56,7 @@ export default function AddExpenseModal({ open, onClose, onAdded }: Props) {
   const watchType      = form.watch("type")
   const watchAccountId = form.watch("account_id")
 
+  // Pre-select the first account when modal opens
   useEffect(() => {
     if (open && accounts.length > 0) {
       form.setValue("account_id", accounts[0].id)
@@ -60,11 +64,18 @@ export default function AddExpenseModal({ open, onClose, onAdded }: Props) {
   }, [open, accounts])
 
   useEffect(() => {
+    if (open) {
+      form.setValue("type", transactionType ?? "expense")
+    }
+  }, [open, transactionType])
+
+  // Reset the form on close
+  useEffect(() => {
     if (!open) {
       form.reset({
         account_id:    "",
         amount:        undefined,
-        type:          "expense",
+        type:          transactionType ?? "expense",
         category:      "",
         note:          "",
         date:          new Date().toISOString().split("T")[0],
@@ -98,22 +109,36 @@ export default function AddExpenseModal({ open, onClose, onAdded }: Props) {
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
       style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)" }}
       onClick={(e) => e.target === overlayRef.current && onClose()}
     >
       <div
-        className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden"
-        style={{ animation: "modalIn 0.2s cubic-bezier(0.22,1,0.36,1) both" }}
+        className={cn(
+          "bg-white w-full sm:max-w-md overflow-hidden",
+          "rounded-t-[24px] sm:rounded-2xl",
+          "shadow-2xl",
+        )}
+        style={{ animation: "modalIn 0.25s cubic-bezier(0.22,1,0.36,1) both" }}
       >
         <style>{`
           @keyframes modalIn {
-            from { opacity: 0; transform: translateY(12px) scale(0.98); }
+            from { opacity: 0; transform: translateY(16px) scale(0.98); }
             to   { opacity: 1; transform: translateY(0) scale(1); }
+          }
+          @media (max-width: 639px) {
+            @keyframes modalIn {
+              from { opacity: 0; transform: translateY(100%); }
+              to   { opacity: 1; transform: translateY(0); }
+            }
           }
         `}</style>
 
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-stone-100">
+        <div className="sm:hidden flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 rounded-full bg-stone-200" />
+        </div>
+
+        <div className="flex items-center justify-between px-5 sm:px-6 pt-4 sm:pt-5 pb-4 border-b border-stone-100">
           <div>
             <h2 className="text-[15px] font-semibold text-stone-900 tracking-tight">Add transaction</h2>
             <p className="mono text-[10px] text-stone-400 mt-0.5">
@@ -128,7 +153,7 @@ export default function AddExpenseModal({ open, onClose, onAdded }: Props) {
           </button>
         </div>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 py-5 flex flex-col gap-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="px-5 sm:px-6 py-5 flex flex-col gap-4">
 
           <div className="flex gap-1 p-1 bg-stone-100 rounded-xl">
             {TYPE_TABS.map(({ value, label, icon: Icon }) => (
@@ -162,6 +187,7 @@ export default function AddExpenseModal({ open, onClose, onAdded }: Props) {
                 type="number"
                 step="0.01"
                 placeholder="0.00"
+                inputMode="decimal"
                 className={cn(
                   "h-12 text-[18px] font-semibold bg-stone-50 border-stone-200 pl-8 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20",
                   form.formState.errors.amount && "border-red-300"
@@ -250,7 +276,7 @@ export default function AddExpenseModal({ open, onClose, onAdded }: Props) {
             </div>
           )}
 
-          <div className="flex gap-2 justify-end pt-1">
+          <div className="flex gap-2 justify-end pt-1 pb-[env(safe-area-inset-bottom,0px)]">
             <Button
               type="button"
               variant="outline"
